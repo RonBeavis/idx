@@ -4,18 +4,14 @@
 #
 
 #
-# contains methods for loading and indexing sequence kernels
+# Identifies kernels corresponding to spectra
+#
 # Reads kernels in either plain text or gzip'd text
 #
 
-#
-# uncomment the next 2 imports for Cython
-#
-#from __future__ import print_function
-#from libcpp cimport bool as bool_t
-import ujson
+#import ujson
+import json
 import time
-#import json
 import re
 import gzip
 import sys
@@ -23,21 +19,30 @@ import itertools
 import copy
 from load_spectra import load_spectra
 
-def index_kernel(_f,_p):
+def index_kernel(_f,_p,_s):
 	ft = float(_p['fragment mass tolerance'])
 	pt = float(_p['parent mass tolerance'])
+	sp_set = set()
+	for s in _s:
+		sp_set.add(int(0.5 + s['pm']/pt))
 	kindex = {}
 	if _f.find('.gz') == len(_f) - 3:
 		f = gzip.open(_f,'rt', encoding='utf-8')
 	else:
 		f = open(_f,'r', encoding='utf-8')
-	i = 0
-	for l in f:
-		js_master = ujson.loads(l)
+	skipped = 0
+	for i,l in enumerate(f):
+		if i % 10000 == 0:
+			print('.',end='')
+			sys.stdout.flush()
+		js_master = json.loads(l)
 		if 'pm' not in js_master:
 			continue
 		pm = js_master['pm']
 		mv = int(0.5+pm/pt)
+		if not (mv in sp_set or mv-1 in sp_set or mv+1 in sp_set):
+			skipped += 1
+			continue
 		bs = js_master['bs']
 		if mv not in kindex:
 			kindex[mv] = {}
@@ -55,12 +60,7 @@ def index_kernel(_f,_p):
 				cindex[sv] = {i}
 			else:
 				cindex[sv].add(i)
-		i += 1
-		if i % 10000 == 0:
-			print('.',end='')
-			sys.stdout.flush()
-	print('')
-	sys.stdout.flush()
+	print('\n\tskipped = %i' % (skipped))
 	f.close()
 	return kindex
 
@@ -108,7 +108,7 @@ def create_ids(_ki,_sp,_p):
 def report_ids(_ids):
 	for j in _ids:
 		print(j)
-	print('ids = %i' % (len(_ids)))
+	print('\tids = %i' % (len(_ids)))
 
 # Coordinate the identification process
 def main():
@@ -117,13 +117,6 @@ def main():
 	param = {}
 	param['fragment mass tolerance'] = 20
 	param['parent mass tolerance'] = 20
-	fname = '/mnt/ssd1/jsms/ai/kernels/UP000005640_9606.KR.kernel'
-	print('index kernel')
-	# read the kernel file and create an index of peptide fragmentation patterns
-	ki = index_kernel(fname,param)
-	delta = time.time()-start
-	start = time.time()
-	print('kernel indexing = %.0f s' % (delta))
 	spectra = []
 	_in = '/mnt/ssd1/jsms/ai/spectra/GPM06610040149.cmn.mgf'
 	print('load spectra')
@@ -131,7 +124,16 @@ def main():
 	spectra = load_spectra(_in,param)
 	delta = time.time()-start
 	start = time.time()
-	print('\nspectra loading = %.0f s' % (delta))
+	print('\n\tspectra = %i' % (len(spectra)))
+	print('\tspectra loading = %.0f s' % (delta))
+	fname = '/mnt/ssd1/jsms/ai/kernels/UP000005640_9606.KR.kernel'
+	print('index kernel')
+	# read the kernel file and create an index of peptide fragmentation patterns
+	ki = index_kernel(fname,param,spectra)
+	delta = time.time()-start
+	start = time.time()
+	print('\tkernels = %i' % (len(ki)))
+	print('\tkernel indexing = %.0f s' % (delta))
 	print('perform ids')
 	# generate a list of identifications for the spectra using the kernel index
 	ids = create_ids(ki,spectra,param)
@@ -139,7 +141,7 @@ def main():
 	start = time.time()
 	# simple reporting of the kernels assigned to spectra
 	report_ids(ids)
-	print('id process = %.0f s' % (delta))
+	print('\tid process = %.0f s' % (delta))
 
 if __name__== "__main__":
 	main()
