@@ -8,13 +8,7 @@
 #
 
 import ujson
-#import json
-import time
-import re
 import gzip
-import sys
-import itertools
-import copy
 
 #
 # formats the output of an idX job into a TSV file

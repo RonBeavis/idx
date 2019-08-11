@@ -8,13 +8,10 @@
 #
 
 import ujson
-#import json
 import time
-import re
 import gzip
 import sys
-import itertools
-import copy
+
 # import the method that deals with spectrum file formats
 from spectraX import load_spectra
 # import the method for the output of results to a file

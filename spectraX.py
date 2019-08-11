@@ -9,9 +9,7 @@
 #from __future__ import print_function
 #from libcpp cimport bool as bool_t
 
-import gzip
 import ujson
-#import json
 import re
 import sys
 import struct
