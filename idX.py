@@ -2,49 +2,66 @@
 # Copyright © 2019 Ronald C. Beavis
 # Licensed under Apache License, Version 2.0, January 2004
 #
-
-#
 # Identifies kernels corresponding to spectra
 #
-# Reads kernels in either plain text or gzip'd text
 # idX version 2019.08.10.01
 #
 
-#import ujson
-import json
+import ujson
+#import json
 import time
 import re
 import gzip
 import sys
 import itertools
 import copy
-from load_spectra import load_spectra
+# import the method that deals with spectrum file formats
+from spectraX import load_spectra
+# import the method for the output of results to a file
+from reportX import report_ids
+
+#
+# load information from a kernel into dictionaries and sets
+#
 
 def index_kernel(_p,_s):
-	ft = float(_p['fragment mass tolerance'])
-	pt = float(_p['parent mass tolerance'])
+	ft = _p['fragment mass tolerance']
+	# permissive parent tolerance in mDa
+	pt = 70
 	sp_set = set()
 	fname = _p['kernel file']
+	# create a set of spectra parent masses
 	for s in _s:
 		sp_set.add(int(0.5 + s['pm']/pt))
 	kindex = {}
+	mindex = dict()
+	# open a handle for the kernel file (may be gzip'd)
 	if fname.find('.gz') == len(fname) - 3:
 		f = gzip.open(fname,'rt', encoding='utf-8')
 	else:
 		f = open(fname,'r', encoding='utf-8')
 	skipped = 0
+	# run through all lines in the kernel
+	# each kernel is indexed by its line number, 'i'
 	for i,l in enumerate(f):
+		# print progress indicator
 		if i % 10000 == 0:
 			print('.',end='')
 			sys.stdout.flush()
-		js = json.loads(l)
+		# convert the line into json
+		js = ujson.loads(l)
+		# check json for a parent mass value
 		if 'pm' not in js:
 			continue
 		pm = js['pm']
+		# test to see if parent mass a possible value, based on the spectra
 		mv = int(0.5+pm/pt)
 		if not (mv in sp_set or mv-1 in sp_set or mv+1 in sp_set):
 			skipped += 1
 			continue
+		# add parent ion mass to dictionary
+		mindex[i] = pm
+		# add b ions to index
 		bs = js['bs']
 		if mv not in kindex:
 			kindex[mv] = {}
@@ -55,6 +72,7 @@ def index_kernel(_p,_s):
 				cindex[sv] = {i}
 			else:
 				cindex[sv].add(i)
+		# add y ions to index
 		ys = js['ys']
 		for s in ys:
 			sv = int(0.5+s/ft)
@@ -62,20 +80,32 @@ def index_kernel(_p,_s):
 				cindex[sv] = {i}
 			else:
 				cindex[sv].add(i)
-	print('\n\tskipped = %i' % (skipped))
+	# finish up and return indexes
+#	print('\n\tskipped = %i' % (skipped))
+	print('')
 	f.close()
-	return kindex
+	return (kindex,mindex)
+#
+# generate identifications of spectra, based on the kernel indexes
+#
 
-def create_ids(_ki,_sp,_p):
+def create_ids(_ki,_mi,_sp,_p):
+	# initialize list of identifications
 	ids = []
 	z = 1
-	pt = float(_p['parent mass tolerance'])
+	pt = 70
+	ppm = _p['parent mass tolerance']/1.0e06
 	dvals = (-1,0,1)
 	count = 0
+	# iterate through spectra
 	for s in _sp:
 		ident = []
 		ims = []
-		pm = int(0.5+s['pm']/pt)
+		rm = float(s['pm'])
+		pm = int(0.5+rm/pt)
+		# check _ki for appropriate fragment ion matches
+		# and record a list of kernel identifiers for each match
+		# and the corresponding fragment ion intensities
 		for d in dvals:
 			if pm+d not in _ki:
 				continue
@@ -94,9 +124,21 @@ def create_ids(_ki,_sp,_p):
 		total = float(sum(s['ims']))
 		ans = {}
 		aint = {}
+		aok = set()
+		# check kernel identifiers for the exact parent ion mass tolerance
+		# and populate aok with identifiers that pass the test
 		for b,i in enumerate(ident):
 			for a in i:
-				if a in ans:
+				if a not in aok and abs(rm-_mi[a]) < ppm*rm:
+					aok.add(a)
+		# perform an ion count and intensity sum
+		# for each kernel identifier
+		for b,i in enumerate(ident):
+			for a in i:
+				if a not in aok:
+					ans[a] = 0
+					aint[a] = 0
+				elif a in ans:
 					ans[a] += 1
 					aint[a] += ims[b]
 				else:
@@ -105,6 +147,7 @@ def create_ids(_ki,_sp,_p):
 		mn = 0
 		mv = []
 		iv = []
+		# order the ion and intensity statistics
 		for j in ans:
 			if ans[j] > mn:
 				mn = ans[j]
@@ -113,6 +156,7 @@ def create_ids(_ki,_sp,_p):
 			elif ans[j] == mn:
 				mv.append(j)
 				iv.append(aint[j])
+		# select identifications based on their ion count and summed intensity
 		if mn > 7:
 			ks = []
 			vis = []
@@ -122,66 +166,34 @@ def create_ids(_ki,_sp,_p):
 					continue
 				ks.append(m)
 			if max_i/total >= 0.20:
-				ids.append({'sn':z,'peaks':mn,'kernels':ks,'ri': max_i/total,'pm': s['pm'],'pz': s['pz']})
+				ids.append({'sn':z,'peaks':mn,'kernels':ks,'ri': max_i/total,'pm': s['pm'],'pz': s['pz'],'sc': s['sc']})
 		z += 1
 	return ids
 
-def report_ids(_ids,_p):
-	sdict = {}
-	scores = {}
-	ivalues = {}
-	zvalues = {}
-	pmvalues = {}
-	for j in _ids:
-		scores[j['sn']] = j['peaks']
-		ivalues[j['sn']] = j['ri']
-		zvalues[j['sn']] = j['pz']
-		pmvalues[j['sn']] = j['pm']
-		for k in j['kernels']:
-			if k in sdict:
-				sdict[k].add(j['sn'])
-			else:
-				sdict[k] = {j['sn']}
-	fname = _p['kernel file']
-	odict = {}
-	if fname.find('.gz') == len(fname) - 3:
-		f = gzip.open(fname,'rt', encoding='utf-8')
-	else:
-		f = open(fname,'r', encoding='utf-8')
-	for i,l in enumerate(f):
-		if i not in sdict:
-			continue
-		js = json.loads(l)
-		if 'pm' not in js:
-			continue
-		spectra = sdict[i]
-		for s in spectra:
-			oline = '%i\t%.3f\t%.3f\t%i\t%s\t%i\t%i\t%s\t%i\t%.2f\t%i' % (s,js['pm']/1000.0,(pmvalues[s]-js['pm'])/1000.0,zvalues[s],js['lb'],js['beg'],js['end'],js['seq'],scores[s],ivalues[s],sum(js['ns']))
-			if s in odict:
-				odict[s].append(oline)
-			else:
-				odict[s] = [oline]
-			
-	f.close()
-	o = open(_p['output file'],'w')
-	oline = 'Spectrum\tPeptide mass\tDelta\tz\tProtein acc\tStart\tEnd\tSequence\tScore\tRI\tFreq'
-	o.write(oline + '\n')
-	for a in sorted(odict):
-		for t in odict[a]:
-			o.write(t + '\n')
-	o.close()
-	print('\tids = %i' % (len(_ids)))
+#
+# Coordinate the identification process, print job stats and progress 
+#
 
-# Coordinate the identification process
 def main():
+	if len(sys.argv) != 4:
+		print('usage:\n\t>python3 idX.py SPECTRA_FILE KERNEL_FILE OUTPUT_FILE')
+		exit()
 	start = time.time()
 	# record relavent parameters
 	param = {}
-	param['fragment mass tolerance'] = 20
-	param['parent mass tolerance'] = 20
+	#fragment tolerance in millidaltons
+	param['fragment mass tolerance'] = float(20)
+	# parent tolerance in ppm
+	param['parent mass tolerance'] = float(20)
 	spectra = []
+	# report files named on command line
+	print(' spectrum file: %s' % (sys.argv[1]))
+	print('   kernel file: %s' % (sys.argv[2]))
+	print('   output file: %s' % (sys.argv[3]))
+
 	param['spectrum file'] = sys.argv[1]
-	print('load spectra')
+	print('load & index spectra')
+	print('\t',end='')
 	# read the spectrum file and perform all necessary spectrum conditioning
 	spectra = load_spectra(param['spectrum file'],param)
 	delta = time.time()-start
@@ -189,20 +201,25 @@ def main():
 	print('\n\tspectra = %i' % (len(spectra)))
 	print('\tspectra loading = %.1f s' % (delta))
 	param['kernel file'] = sys.argv[2]
-	print('index kernel')
+	print('load & index kernel')
+	print('\t',end='')
 	# read the kernel file and create an index of peptide fragmentation patterns
-	ki = index_kernel(param,spectra)
+	(ki,mi) = index_kernel(param,spectra)
 	delta = time.time()-start
 	start = time.time()
 	print('\tkernels = %i' % (len(ki)))
 	print('\tkernel indexing = %.1f s' % (delta))
 	print('perform ids')
 	# generate a list of identifications for the spectra using the kernel index
-	ids = create_ids(ki,spectra,param)
+	ids = create_ids(ki,mi,spectra,param)
 	# free memory associated with indexes and spectra
 	delta = time.time()-start
 	start = time.time()
 	print('\tid process = %.3f s' % (delta))
+	if len(spectra) > 0:
+		print('\ttime per spectrum = %.1f μs' % (1.0e06*delta/len(spectra)))
+	else:
+		pass
 	# simple reporting of the kernels assigned to spectra
 	print('release memory')
 	ki = None
