@@ -9,6 +9,7 @@
 
 import ujson
 import gzip
+import re
 
 #
 # formats the output of an idX job into a TSV file
@@ -53,9 +54,14 @@ def report_ids(_ids,_p):
 				sub[s+1] += 1
 			else:
 				sub[s+1] = 1
-			oline = '%i.%i\t%i\t%.3f\t%.3f\t%.1f\t%i\t%s\t%i\t%i\t%s\t%i\t%.2f\t%i' % (
+			oline = '%i.%i\t%i\t%.3f\t%.3f\t%.1f\t%i\t%s\t%i\t%i\t%s\t%i\t%.2f\t%i\t' % (
 				s+1,sub[s+1],sv[s]['sc'],js['pm']/1000.0,delta,ppm,sv[s]['pz'],
 				js['lb'],js['beg'],js['end'],js['seq'],sv[s]['peaks'],sv[s]['ri'],sum(js['ns']))
+			if 'mods' in js:
+				mod_string = ''
+				for m in js['mods']:
+					mod_string += '%s%i#%.3f,' % (m[0],m[1],m[2]/1000.0)
+				oline += re.sub('\,$','',mod_string)
 			last_i = s+1
 			if s in odict:
 				odict[s].append(oline)
@@ -66,7 +72,7 @@ def report_ids(_ids,_p):
 	# open the output file specified in _p
 	o = open(_p['output file'],'w')
 	# create the header line
-	oline = 'Id\tScan\tPeptide mass\tDelta\tppm\tz\tProtein acc\tStart\tEnd\tSequence\tScore\tRI\tFreq'
+	oline = 'Id\tScan\tPeptide mass\tDelta\tppm\tz\tProtein acc\tStart\tEnd\tSequence\tScore\tRI\tFreq\tModifications'
 	o.write(oline + '\n')
 	# output the lines in odict, sorted by id number
 	for a in sorted(odict):
