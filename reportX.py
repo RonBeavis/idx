@@ -11,6 +11,7 @@ import ujson
 import gzip
 import re
 import sys
+from operator import itemgetter
 
 #
 # formats the output of an idX job into a TSV file
@@ -69,9 +70,9 @@ def report_ids(_ids,_p):
 				js['lb'],js['beg'],js['end'],js['seq'],sv[s]['peaks'],sv[s]['ri'],sum(js['ns']))
 			if 'mods' in js:
 				mod_string = ''
-				for m in js['mods']:
-					mod_string += '%s%i#%.3f,' % (m[0],m[1],m[2]/1000.0)
-				oline += re.sub('\,$','',mod_string)
+				for m in sorted(js['mods'],key=itemgetter(2)):
+					mod_string += '%s%i#%.3f;' % (m[0],m[1],m[2]/1000.0)
+				oline += re.sub('\;$','',mod_string)
 			last_i = s+1
 			if s in odict:
 				odict[s].append(oline)

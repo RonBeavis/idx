@@ -104,7 +104,7 @@ def create_ids(_ki,_mi,_sp,_p):
 	count = 0
 	# iterate through spectra
 	for c,s in enumerate(_sp):
-		if c % 5000 == 0:
+		if c % 2000 == 0:
 			print('.',end='')
 			sys.stdout.flush()
 		ident = []
