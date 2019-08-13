@@ -4,12 +4,13 @@
 #
 # Creates an output file from an idX job
 #
-# idX version 2019.08.10.01
+# idX version 2019.08.10.02
 #
 
 import ujson
 import gzip
 import re
+import sys
 
 #
 # formats the output of an idX job into a TSV file
@@ -34,13 +35,22 @@ def report_ids(_ids,_p):
 	else:
 		f = open(fname,'r', encoding='utf-8')
 	sub = dict()
+	inferred = 0
 	#read through the kernel file and extract required information
-	for i,l in enumerate(f):
+	for c,l in enumerate(f):
 		# check to see if line has information in _ids
-		if i not in sdict:
-			continue
+		if c % 10000 == 0:
+			print('.',end='')
+			sys.stdout.flush()
 		js = ujson.loads(l)
-		spectra = sdict[i]
+		if 'pm' not in js:
+			continue
+		h = js['h']
+		if h not in sdict:
+			continue
+		if h != js['u']:
+			inferred += 1
+		spectra = sdict[h]
 		last_i = 0
 		# create lines of output information
 		# and store in odict
@@ -79,5 +89,6 @@ def report_ids(_ids,_p):
 		for t in odict[a]:
 			o.write(t + '\n')
 	o.close()
-	print('\tids = %i' % (len(_ids)))
+	print('\n\tids = %i' % (len(_ids)))
+	print('\tidenticals = %i' % (inferred))
 

@@ -4,18 +4,21 @@
 #
 # Identifies kernels corresponding to spectra
 #
-# idX version 2019.08.10.01
+# idX version 2019.08.10.02
 #
 
 import ujson
 import time
 import gzip
 import sys
+import datetime
 
 # import the method that deals with spectrum file formats
 from spectraX import load_spectra
 # import the method for the output of results to a file
 from reportX import report_ids
+
+version = '2019.08.10.2'
 
 #
 # load information from a kernel into dictionaries and sets
@@ -38,6 +41,7 @@ def index_kernel(_p,_s):
 	else:
 		f = open(fname,'r', encoding='utf-8')
 	skipped = 0
+	hmatched = 0
 	# run through all lines in the kernel
 	# each kernel is indexed by its line number, 'i'
 	for i,l in enumerate(f):
@@ -49,6 +53,10 @@ def index_kernel(_p,_s):
 		js = ujson.loads(l)
 		# check json for a parent mass value
 		if 'pm' not in js:
+			continue
+		u = js['u']
+		if js['u'] != js['h']:
+			hmatched += 1
 			continue
 		pm = js['pm']
 		# test to see if parent mass a possible value, based on the spectra
@@ -66,20 +74,20 @@ def index_kernel(_p,_s):
 		for s in bs:
 			sv = int(0.5+s/ft)
 			if sv not in cindex:
-				cindex[sv] = {i}
+				cindex[sv] = {u}
 			else:
-				cindex[sv].add(i)
+				cindex[sv].add(u)
 		# add y ions to index
 		ys = js['ys']
 		for s in ys:
 			sv = int(0.5+s/ft)
 			if sv not in cindex:
-				cindex[sv] = {i}
+				cindex[sv] = {u}
 			else:
-				cindex[sv].add(i)
+				cindex[sv].add(u)
 	# finish up and return indexes
-#	print('\n\tskipped = %i' % (skipped))
-	print('')
+	print('\n\tskipped = %i' % (skipped))
+	print('\tidentical = %i' % (hmatched))
 	f.close()
 	return (kindex,mindex)
 #
@@ -95,7 +103,10 @@ def create_ids(_ki,_mi,_sp,_p):
 	dvals = (-1,0,1)
 	count = 0
 	# iterate through spectra
-	for s in _sp:
+	for c,s in enumerate(_sp):
+		if c % 5000 == 0:
+			print('.',end='')
+			sys.stdout.flush()
 		ident = []
 		ims = []
 		rm = float(s['pm'])
@@ -165,6 +176,7 @@ def create_ids(_ki,_mi,_sp,_p):
 			if max_i/total >= 0.20:
 				ids.append({'sn':z,'peaks':mn,'kernels':ks,'ri': max_i/total,'pm': s['pm'],'pz': s['pz'],'sc': s['sc']})
 		z += 1
+	print('')
 	return ids
 
 #
@@ -184,10 +196,12 @@ def main():
 	param['parent mass tolerance'] = float(20)
 	spectra = []
 	# report files named on command line
-	print(' spectrum file: %s' % (sys.argv[1]))
-	print('   kernel file: %s' % (sys.argv[2]))
-	print('   output file: %s' % (sys.argv[3]))
-
+	print('\nidX parameters')
+	print('\t spectrum file: %s' % (sys.argv[1]))
+	print('\t   kernel file: %s' % (sys.argv[2]))
+	print('\t   output file: %s' % (sys.argv[3]))
+	print('\t       version: %s' % (version))
+	print('\t      run time: %s' % (str(datetime.datetime.now())))
 	param['spectrum file'] = sys.argv[1]
 	print('load & index spectra')
 	print('\t',end='')
@@ -207,6 +221,7 @@ def main():
 	print('\tkernels = %i' % (len(ki)))
 	print('\tkernel indexing = %.1f s' % (delta))
 	print('perform ids')
+	print('\t',end='')
 	# generate a list of identifications for the spectra using the kernel index
 	ids = create_ids(ki,mi,spectra,param)
 	# free memory associated with indexes and spectra
@@ -221,8 +236,10 @@ def main():
 	print('release memory')
 	ki = None
 	spectra = None
+	print('\tdone')
 	param['output file'] = sys.argv[3]
 	print('create report')
+	print('\t',end='')
 	report_ids(ids,param)
 	print('done')
 
