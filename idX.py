@@ -55,7 +55,8 @@ def index_kernel(_p,_s):
 		if 'pm' not in js:
 			continue
 		if 'u' not in js:
-			print('\nERROR: kernel file does not have unique identifiers\n\tline %i: check for "u" value in "%s"' % (i+1,fname))
+			print('\nERROR: kernel file does not have unique identifiers')
+			print('\n\tline %i: check for "u" value in "%s"' % (i+1,fname))
 			f.close()
 			exit() 
 		u = js['u']
@@ -69,7 +70,7 @@ def index_kernel(_p,_s):
 			skipped += 1
 			continue
 		# add parent ion mass to dictionary
-		mindex[i] = pm
+		mindex[u] = pm
 		# add b ions to index
 		bs = js['bs']
 		if mv not in kindex:
@@ -78,17 +79,17 @@ def index_kernel(_p,_s):
 		for s in bs:
 			sv = int(0.5+s/ft)
 			if sv not in cindex:
-				cindex[sv] = {u}
+				cindex[sv] = [u]
 			else:
-				cindex[sv].add(u)
+				cindex[sv].append(u)
 		# add y ions to index
 		ys = js['ys']
 		for s in ys:
 			sv = int(0.5+s/ft)
 			if sv not in cindex:
-				cindex[sv] = {u}
+				cindex[sv] = [u]
 			else:
-				cindex[sv].add(u)
+				cindex[sv].append(u)
 	# finish up and return indexes
 	print('\n\tskipped = %i' % (skipped))
 	print('\tidentical = %i' % (hmatched))
@@ -118,21 +119,26 @@ def create_ids(_ki,_mi,_sp,_p):
 		# check _ki for appropriate fragment ion matches
 		# and record a list of kernel identifiers for each match
 		# and the corresponding fragment ion intensities
+		idx = None
+		idi = None
 		for d in dvals:
 			if pm+d not in _ki:
 				continue
 			ci = _ki[pm+d]
 			for b,m in enumerate(s['sms']):
-				v = m
-				if v in ci:
-					ident.append(ci[v])
-					ims.append(s['ims'][b])
-				elif v-1 in ci:
-					ident.append(ci[v-1])
-					ims.append(s['ims'][b])
-				elif v+1 in ci:
-					ident.append(ci[v+1])
-					ims.append(s['ims'][b])
+				if m in ci:
+					idx = ci[m]
+					idi = s['ims'][b]
+				elif m-1 in ci:
+					idx = ci[m-1]
+					idi = s['ims'][b]
+				elif m+1 in ci:
+					idx = ci[m+1]
+					idi = s['ims'][b]
+				else:
+					continue
+				ident.append(idx)
+				ims.append(idi)
 		total = float(sum(s['ims']))
 		ans = {}
 		aint = {}
@@ -201,6 +207,9 @@ def main():
 	spectra = []
 	# report files named on command line
 	print('\nidX parameters')
+	print('\t  fragment tol: %i mDa' % (param['fragment mass tolerance']))
+	print('\t    parent tol: %i ppm' % (param['parent mass tolerance']))
+	print('\t spectrum file: %s' % (sys.argv[1]))
 	print('\t spectrum file: %s' % (sys.argv[1]))
 	print('\t   kernel file: %s' % (sys.argv[2]))
 	print('\t   output file: %s' % (sys.argv[3]))
@@ -233,7 +242,7 @@ def main():
 	start = time.time()
 	print('\tid process = %.3f s' % (delta))
 	if len(spectra) > 0:
-		print('\ttime per spectrum = %.1f μs' % (1.0e06*delta/len(spectra)))
+		print('\ttime per spectrum = %.0f μs' % (1.0e06*delta/len(spectra)))
 	else:
 		pass
 	# simple reporting of the kernels assigned to spectra
