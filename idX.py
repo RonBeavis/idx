@@ -54,6 +54,10 @@ def index_kernel(_p,_s):
 		# check json for a parent mass value
 		if 'pm' not in js:
 			continue
+		if 'u' not in js:
+			print('\nERROR: kernel file does not have unique identifiers\n\tline %i: check for "u" value in "%s"' % (i+1,fname))
+			f.close()
+			exit() 
 		u = js['u']
 		if js['u'] != js['h']:
 			hmatched += 1
