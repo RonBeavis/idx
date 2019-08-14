@@ -170,7 +170,7 @@ def load_mgf(_in,_param):
 			if line.find('scan=') != -1:
 				js['sc'] = int(re.sub('.+scan\=','',line))
 			else:
-				js['sc'] = s+1
+				js['sc'] = s
 	return sp
 #
 #	mzMLHandler necessary to XML SAX handler

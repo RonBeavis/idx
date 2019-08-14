@@ -46,7 +46,7 @@ def index_kernel(_p,_s):
 	# each kernel is indexed by its line number, 'i'
 	for i,l in enumerate(f):
 		# print progress indicator
-		if i % 10000 == 0:
+		if i % 20000 == 0:
 			print('.',end='')
 			sys.stdout.flush()
 		# convert the line into json
@@ -64,6 +64,8 @@ def index_kernel(_p,_s):
 			hmatched += 1
 			continue
 		pm = js['pm']
+#		if not (js['seq'] == 'THEAQIQEMR'):
+#			continue
 		# test to see if parent mass a possible value, based on the spectra
 		mv = int(0.5+pm/pt)
 		if not (mv in sp_set or mv-1 in sp_set or mv+1 in sp_set):
@@ -129,17 +131,11 @@ def create_ids(_ki,_mi,_sp,_p):
 				if m in ci:
 					idx = ci[m]
 					idi = s['ims'][b]
-				elif m-1 in ci:
-					idx = ci[m-1]
-					idi = s['ims'][b]
-				elif m+1 in ci:
-					idx = ci[m+1]
-					idi = s['ims'][b]
 				else:
 					continue
 				ident.append(idx)
 				ims.append(idi)
-		total = float(sum(s['ims']))
+		total = float(sum(s['ims']))/3
 		ans = {}
 		aint = {}
 		aok = set()
@@ -152,7 +148,7 @@ def create_ids(_ki,_mi,_sp,_p):
 		# perform an ion count and intensity sum
 		# for each kernel identifier
 		for b,i in enumerate(ident):
-			for a in i:
+			for a in set(i):
 				if a not in aok:
 					ans[a] = 0
 					aint[a] = 0
@@ -175,7 +171,7 @@ def create_ids(_ki,_mi,_sp,_p):
 				mv.append(j)
 				iv.append(aint[j])
 		# select identifications based on their ion count and summed intensity
-		if mn > 7:
+		if mn > 4:
 			ks = []
 			vis = []
 			max_i = max(iv)
@@ -183,8 +179,9 @@ def create_ids(_ki,_mi,_sp,_p):
 				if iv[b] < max_i:
 					continue
 				ks.append(m)
-			if max_i/total >= 0.20:
-				ids.append({'sn':z,'peaks':mn,'kernels':ks,'ri': max_i/total,'pm': s['pm'],'pz': s['pz'],'sc': s['sc']})
+			id_values = {'sn':z,'peaks':mn,'kernels':ks,'ri': max_i/total,'pm': s['pm'],
+					'pz': s['pz'],'sc': s['sc'],'ions' : len(s['sms'])/3}
+			ids.append(id_values)
 		z += 1
 	print('')
 	return ids
@@ -201,7 +198,7 @@ def main():
 	# record relavent parameters
 	param = {}
 	#fragment tolerance in millidaltons
-	param['fragment mass tolerance'] = float(20)
+	param['fragment mass tolerance'] = float(400)
 	# parent tolerance in ppm
 	param['parent mass tolerance'] = float(20)
 	spectra = []
@@ -209,7 +206,6 @@ def main():
 	print('\nidX parameters')
 	print('\t  fragment tol: %i mDa' % (param['fragment mass tolerance']))
 	print('\t    parent tol: %i ppm' % (param['parent mass tolerance']))
-	print('\t spectrum file: %s' % (sys.argv[1]))
 	print('\t spectrum file: %s' % (sys.argv[1]))
 	print('\t   kernel file: %s' % (sys.argv[2]))
 	print('\t   output file: %s' % (sys.argv[3]))
