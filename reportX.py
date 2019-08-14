@@ -15,6 +15,38 @@ import math
 from scipy.stats import hypergeom,tmean,tstd
 from operator import itemgetter
 
+#
+# finds upper and lower limits for identification window
+#
+
+def find_window(_ppms):
+	vs = {}
+	for i in range(-20,21):
+		vs[i] = 0
+	for s in _ppms:
+		i = round(_ppms[s])
+		if i >= -20 and i <= 20:
+			vs[i] += 1
+	center = max(vs, key=vs.get)
+	ic = float(vs[center])
+	if ic < 100:
+		return (-20,20)
+	low = center
+	for i in range(-20,center):
+		if vs[i]/ic >= 0.01:
+			low = i
+			break
+	high = center
+	for i in range(20,center,-1):
+		if vs[i]/ic >= 0.01:
+			high = i
+			break
+	return (low,high)
+#
+# applys the current statistical model for evaluating an
+# identification
+#
+
 def apply_model(_res,_seq,_pm,_ions,_lspectrum):
 	sfactor = 20
 	sadjust = 1
@@ -61,10 +93,10 @@ def report_ids(_ids,_p):
 		f = gzip.open(fname,'rt', encoding='utf-8')
 	else:
 		f = open(fname,'r', encoding='utf-8')
-	sub = dict()
 	inferred = 0
 	score_min = 200.0
 	#read through the kernel file and extract required information
+	ppms = {}
 	for c,l in enumerate(f):
 		# check to see if line has information in _ids
 		if c % 20000 == 0:
@@ -88,15 +120,10 @@ def report_ids(_ids,_p):
 			# update the "sub" identifier for an identification
 			# used to distiguish ids when there is more than
 			# oene kernel identified for a particular spectrum
-			if s+1 in sub:
-				sub[s+1] += 1
-			else:
-				sub[s+1] = 1
 			score = apply_model(res,js['seq'],js['pm'],sv[s]['peaks'],sv[s]['ions'])
 			if score < score_min or sv[s]['ri'] < 0.20 or sv[s]['peaks'] < 8:
 				continue
-			oline = '%i.%i\t' % (s,sub[s+1])
-			oline += '%i\t%.3f\t' % (sv[s]['sc'],js['pm']/1000.0)
+			oline = '%i\t%.3f\t' % (sv[s]['sc'],js['pm']/1000.0)
 			oline += '%.3f\t%.1f\t' % (delta,ppm)
 			oline += '%i\t%s\t' % (sv[s]['pz'],js['lb'])
 			oline += '%i\t%i\t' % (js['beg'],js['end'])
@@ -113,20 +140,33 @@ def report_ids(_ids,_p):
 				odict[s].append(oline)
 			else:
 				odict[s] = [oline]
+			ppms[s] = ppm
 			
 	f.close()
 	# open the output file specified in _p
 	o = open(_p['output file'],'w')
 	# create the header line
-	oline = 'Id\tScan\tPeptide mass\tDelta\tppm\tz\tProtein acc\tStart\tEnd\tPre\tSequence\tPost\tIC\tRI\tFreq\tScore\tModifications'
-	o.write(oline + '\n')
+	oline = 'Id\tScan\tPeptide mass\tDelta\tppm\tz\tProtein acc\t'
+	oline += 'Start\tEnd\tPre\tSequence\tPost\tIC\tRI\tFreq\tScore\tModifications\n'
+	o.write(oline)
 	# output the lines in odict, sorted by id number
-	total = 0
+	tot = 0
+	(low,high) = find_window(ppms)
+	err = 0
 	for a in sorted(odict):
+		sub = 1
 		for t in odict[a]:
-			o.write(t + '\n')
-			total += 1
+			ps = t.split('\t')
+			if high >= round(float(ps[3])) >= low:
+				o.write('%i.%i\t%s\n' % (a,sub,t))
+				sub += 1
+				tot += 1
+			else:
+				err += 1
 	o.close()
-	print('\n\tlines = %i' % (total))
-	print('\tidenticals = %i' % (inferred))
+	print('\n\t     lines = %i' % (tot))
+	if low != -20 and high != 20:
+		ble = 100.0*((high-low)/41.0)*float(err)/float(tot)
+		print('\t       ble = %.1f%%' % (ble))
+	print('\tppm window = %i,%i' % (low,high))
 

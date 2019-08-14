@@ -93,8 +93,8 @@ def index_kernel(_p,_s):
 			else:
 				cindex[sv].append(u)
 	# finish up and return indexes
-	print('\n\tskipped = %i' % (skipped))
-	print('\tidentical = %i' % (hmatched))
+#	print('\n\t      skipped = %i' % (skipped))
+#	print('\t     identical = %i' % (hmatched))
 	f.close()
 	return (kindex,mindex)
 #
@@ -203,7 +203,7 @@ def main():
 	param['parent mass tolerance'] = float(20)
 	spectra = []
 	# report files named on command line
-	print('\nidX parameters')
+	print('\nstart ...\nidX parameters')
 	print('\t  fragment tol: %i mDa' % (param['fragment mass tolerance']))
 	print('\t    parent tol: %i ppm' % (param['parent mass tolerance']))
 	print('\t spectrum file: %s' % (sys.argv[1]))
@@ -218,8 +218,8 @@ def main():
 	spectra = load_spectra(param['spectrum file'],param)
 	delta = time.time()-start
 	start = time.time()
-	print('\n\tspectra = %i' % (len(spectra)))
-	print('\tspectra loading = %.1f s' % (delta))
+	print('\n\t   spectra = %i' % (len(spectra)))
+	print('\tspectra ΔT = %.1f s' % (delta))
 	param['kernel file'] = sys.argv[2]
 	print('load & index kernel')
 	print('\t',end='')
@@ -227,8 +227,8 @@ def main():
 	(ki,mi) = index_kernel(param,spectra)
 	delta = time.time()-start
 	start = time.time()
-	print('\tkernels = %i' % (len(ki)))
-	print('\tkernel indexing = %.1f s' % (delta))
+	print('\n\t   kernels = %i' % (len(ki)))
+	print('\tkernel ΔT = %.1f s' % (delta))
 	print('perform ids')
 	print('\t',end='')
 	# generate a list of identifications for the spectra using the kernel index
@@ -236,9 +236,9 @@ def main():
 	# free memory associated with indexes and spectra
 	delta = time.time()-start
 	start = time.time()
-	print('\tid process = %.3f s' % (delta))
+	print('\tid ΔT = %.3f s' % (delta))
 	if len(spectra) > 0:
-		print('\ttime per spectrum = %.0f μs' % (1.0e06*delta/len(spectra)))
+		print('\t   δT = %.0f μs' % (1.0e06*delta/len(spectra)))
 	else:
 		pass
 	# simple reporting of the kernels assigned to spectra
@@ -250,7 +250,7 @@ def main():
 	print('create report')
 	print('\t',end='')
 	report_ids(ids,param)
-	print('done')
+	print('... done')
 
 if __name__== "__main__":
 	main()
