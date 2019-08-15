@@ -77,7 +77,7 @@ def update_collagen(_info):
 			for j,r in enumerate(seq):
 				if j in site:
 					dm += mod
-					mods.append(r,j+js['beg'],mod])
+					mods.append([r,j+js['beg'],mod])
 				bions[j] += dm
 			j = len(js['seq']) - 1
 			if j in site:
