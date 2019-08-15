@@ -1,12 +1,18 @@
 import os
 
-output = 'k/mm.KR.kernel'
-base = 'mm.KR'
+output = 'k/hs.KR.kernel'
+base = 'hs.KR'
 
-alt = '.ia'
+alt = '.iac'
 out_file = 'k/%s%s.kernel' % (base,alt)
 tfiles = set({out_file})
 os.system('python3 ktools/modify.py ../kernels/%s.kernel %s 57.021464@C -f' % (base,out_file))
+
+base += alt
+alt = '.iau'
+out_file = 'k/%s%s.kernel' % (base,alt)
+tfiles.add(out_file)
+os.system('python3 ktools/modify.py k/%s.kernel %s 57.021464@U -f' % (base,out_file))
 
 base += alt
 alt = '.pQ'
@@ -31,6 +37,11 @@ base += alt
 alt = '.ac'
 out_file = 'k/%s%s.kernel' % (base,alt)
 os.system('python3 ktools/modify.py k/%s.kernel %s 42.010565@^ -v' % (base,out_file))
+
+base += alt
+alt = '.sp'
+out_file = 'k/%s%s.kernel' % (base,alt)
+os.system('python3 ktools/special_modify.py k/%s.kernel %s' % (base,out_file))
 
 os.rename(out_file,output)
 

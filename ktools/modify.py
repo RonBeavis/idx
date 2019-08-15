@@ -12,6 +12,7 @@ import time
 import gzip
 import sys
 import copy
+import itertools
 import hashlib
 import re
 
@@ -305,7 +306,9 @@ def update_ct_index(_info,_v):
 	of.close()
 	print('')
 
-def update_vindex(_info):
+def update_vindex(_info,_d):
+	depth = _d
+	print('depth = %i' % (depth))
 	mhash = hashlib.sha256()
 	in_file = _info['input file']
 	out_file = _info['output file']
@@ -340,7 +343,13 @@ def update_vindex(_info):
 		for j,r in enumerate(seq):
 			if r == res:
 				spos.append(j)
-		for site in spos:
+		site_list = []
+		dlimit = depth
+		if len(spos) < depth:
+			dlimit = len(spos)
+		for d in range(1,dlimit + 1):
+			site_list += list(itertools.combinations(spos,d))
+		for site in site_list:
 			js = copy.deepcopy(os)
 			seq = list(os['seq'])
 			seq.pop()
@@ -350,19 +359,22 @@ def update_vindex(_info):
 			if 'mods' in js:
 				mods = js['mods']
 			for j,r in enumerate(seq):
-				if j == site:
+				if j in site:
 					dm += mod
 					mods.append([res,j+js['beg'],mod])
 				bions[j] += dm
-			if site == len(js['seq']) - 1:
+			j = len(js['seq']) - 1
+			if j in site:
 				dm += mod
+				mods.append([res,j+js['beg'],mod])
 			js['pm'] += dm
 			js['bs'] = bions
 			yions = js['ys']
 			dm = 0
-			site = len(seq) - site
+			len_seq = len(seq)
+			ysite = [len_seq-s for s in site]
 			for j,r in enumerate(seq):
-				if j == site:
+				if j in ysite:
 					dm += mod
 				yions[j] += dm
 			js['ys'] = yions
@@ -395,7 +407,7 @@ for i in info:
 if sys.argv[4] == '-f':
 	if info['residue'] == '[':
 		update_nt_index(info,0)
-	elif len(info['residue']) == 2:
+	elif len(info['residue']) == 2 and info['residue'].find('[') == 0:
 		update_bnt_index(info,0)
 	elif info['residue'] == '^':
 		update_pnt_index(info,0)
@@ -406,13 +418,18 @@ if sys.argv[4] == '-f':
 elif sys.argv[4] == '-v':
 	if info['residue'] == '[':
 		update_nt_index(info,1)
-	elif len(info['residue']) == 2:
+	elif len(info['residue']) == 2 and info['residue'].find('[') == 0:
 		update_bnt_index(info,1)
 	elif info['residue'] == '^':
 		update_pnt_index(info,1)
 	elif info['residue'] == ']':
 		update_ct_index(info,1)
 	else:
-		update_vindex(info)
+		vs = list(info['residue'])
+		if len(vs) == 1:
+			update_vindex(info,1)
+		else:
+			info['residue'] = vs[1]
+			update_vindex(info,int(vs[0]))
 
 
