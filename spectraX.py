@@ -70,8 +70,11 @@ def load_jsms(_in,_param):
 			js['ms'] = vs
 			js = clean_one(js,50,res)
 			sp.append(js)
-			if len(sp) % 10000 == 0:
+			if len(sp) % 500 == 0:
 				print('.',end='')
+				sys.stdout.flush()
+			if len(sp) != 0 and len(sp) % 5000 == 0:
+				print(' %i' % (len(sp)))
 				sys.stdout.flush()
 	f.close()
 	return sp
@@ -141,8 +144,11 @@ def load_mgf(_in,_param):
 				js['is'] = Is[:MsPos]
 				jc = clean_one(js,50,res)
 				sp.append(jc)
-			if len(sp) % 10000 == 0:
+			if len(sp) != 0 and len(sp) % 100 == 0:
 				print('.',end='')
+				sys.stdout.flush()
+			if len(sp) != 0 and len(sp) % 500 == 0:
+				print(' %i' % (len(sp)))
 				sys.stdout.flush()
 			amIn = 0
 			s += 1
@@ -343,8 +349,10 @@ class mzMLHandler(xml.sax.ContentHandler):
 					sp = self.cleanOne()
 					self.spectra.append(sp)
 				self.n += 1
-				if self.n % 10000 == 0:
+				if self.n % 100 == 0:
 					print('.',end='',flush=True)
+				if self.n != 0 and self.n % 500 == 0:
+					print(' %i' % (self.n),flush=True)
 
 			self.jsms = {}
 		if tag == 'scan':

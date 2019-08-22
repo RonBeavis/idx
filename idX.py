@@ -46,8 +46,11 @@ def index_kernel(_p,_s):
 	# each kernel is indexed by its line number, 'i'
 	for i,l in enumerate(f):
 		# print progress indicator
-		if i % 20000 == 0:
+		if i != 0 and i % 2500 == 0:
 			print('.',end='')
+			sys.stdout.flush()
+		if i != 0 and i % 50000 == 0:
+			print(' %i' % (i))
 			sys.stdout.flush()
 		# convert the line into json
 		js = ujson.loads(l)
@@ -111,8 +114,11 @@ def create_ids(_ki,_mi,_sp,_p):
 	count = 0
 	# iterate through spectra
 	for c,s in enumerate(_sp):
-		if c % 2000 == 0:
+		if c != 0 and c % 50 == 0:
 			print('.',end='')
+			sys.stdout.flush()
+		if c != 0 and c % 1000 == 0:
+			print(' %i' % (c))
 			sys.stdout.flush()
 		ident = []
 		ims = []
@@ -191,19 +197,37 @@ def create_ids(_ki,_mi,_sp,_p):
 #
 
 def main():
-	if len(sys.argv) != 4:
-		print('usage:\n\t>python3 idX.py SPECTRA_FILE KERNEL_FILE OUTPUT_FILE')
+	if len(sys.argv) < 4:
+		print('usage:\n\t>python3 idX.py SPECTRA_FILE KERNEL_FILE OUTPUT_FILE (high|medium|low*)')
 		exit()
 	start = time.time()
 	# record relavent parameters
 	param = {}
 	#fragment tolerance in millidaltons
 	param['fragment mass tolerance'] = float(400)
+	try:
+		if sys.argv[4] == 'high':
+			param['fragment mass tolerance'] = float(20)
+		elif sys.argv[4] == 'low':
+			param['fragment mass tolerance'] = float(400)
+		elif sys.argv[4] == 'medium':
+			param['fragment mass tolerance'] = float(100)
+		else:
+			print('ERROR: argument 4 must be high or low, not "%s"'% (sys.argv[4]))
+			exit()
+	except:
+		pass
+	param['maximum spectra'] = -1
+	try:
+		param['maximum spectra'] = int(sys.argv[5])
+	except:
+		pass
 	# parent tolerance in ppm
 	param['parent mass tolerance'] = float(20)
 	spectra = []
 	# report files named on command line
 	print('\nstart ...\nidX parameters')
+	print('\t   max spectra: %i mDa' % (param['maximum spectra']))
 	print('\t  fragment tol: %i mDa' % (param['fragment mass tolerance']))
 	print('\t    parent tol: %i ppm' % (param['parent mass tolerance']))
 	print('\t spectrum file: %s' % (sys.argv[1]))
@@ -213,32 +237,35 @@ def main():
 	print('\t      run time: %s' % (str(datetime.datetime.now())))
 	param['spectrum file'] = sys.argv[1]
 	print('load & index spectra')
-	print('\t',end='')
 	# read the spectrum file and perform all necessary spectrum conditioning
 	spectra = load_spectra(param['spectrum file'],param)
+	if param['maximum spectra'] != -1:
+		spectra = spectra[0:param['maximum spectra']]
+	if len(spectra) == 0:
+		print('exiting: 0 spectra found')
+		print('done')
+		exit()
 	delta = time.time()-start
 	start = time.time()
 	print('\n\t   spectra = %i' % (len(spectra)))
-	print('\tspectra ΔT = %.1f s' % (delta))
+	print('\tspectra &Delta;T = %.1f s' % (delta))
 	param['kernel file'] = sys.argv[2]
 	print('load & index kernel')
-	print('\t',end='')
 	# read the kernel file and create an index of peptide fragmentation patterns
 	(ki,mi) = index_kernel(param,spectra)
 	delta = time.time()-start
 	start = time.time()
 	print('\n\t   kernels = %i' % (len(ki)))
-	print('\tkernel ΔT = %.1f s' % (delta))
+	print('\t &Delta;T = %.1f s' % (delta))
 	print('perform ids')
-	print('\t',end='')
 	# generate a list of identifications for the spectra using the kernel index
 	ids = create_ids(ki,mi,spectra,param)
 	# free memory associated with indexes and spectra
 	delta = time.time()-start
 	start = time.time()
-	print('\tid ΔT = %.3f s' % (delta))
+	print('\tid &Delta;T = %.3f s' % (delta))
 	if len(spectra) > 0:
-		print('\t   δT = %.0f μs' % (1.0e06*delta/len(spectra)))
+		print('\t   &delta;T = %.0f microseconds' % (1.0e06*delta/len(spectra)))
 	else:
 		pass
 	# simple reporting of the kernels assigned to spectra
@@ -248,7 +275,6 @@ def main():
 	print('\tdone')
 	param['output file'] = sys.argv[3]
 	print('create report')
-	print('\t',end='')
 	report_ids(ids,param)
 	print('... done')
 

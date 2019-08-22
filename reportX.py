@@ -19,6 +19,15 @@ from operator import itemgetter
 # finds upper and lower limits for identification window
 #
 
+def load_mods():
+	ls = [x.strip() for x in open('f:/idx/report_mods.txt','r')]
+	mods = {}
+	for l in ls:
+		vs = l.split('\t')
+		if len(vs) == 2:
+			mods[int(vs[0])] = vs[1]
+	return mods
+	
 def find_window(_ppms):
 	vs = {}
 	for i in range(-20,21):
@@ -75,6 +84,7 @@ def apply_model(_res,_seq,_pm,_ions,_lspectrum):
 #
 
 def report_ids(_ids,_p):
+	mods_translation = load_mods()
 	sdict = {}
 	sv = {}
 	# create an index of the results in _ids
@@ -99,8 +109,11 @@ def report_ids(_ids,_p):
 	ppms = {}
 	for c,l in enumerate(f):
 		# check to see if line has information in _ids
-		if c % 20000 == 0:
+		if c != 0 and c % 2500 == 0:
 			print('.',end='')
+			sys.stdout.flush()
+		if c != 0 and c % 50000 == 0:
+			print(' %i' % (c))
 			sys.stdout.flush()
 		js = ujson.loads(l)
 		if 'pm' not in js:
@@ -131,9 +144,22 @@ def report_ids(_ids,_p):
 			oline += '%s\t%i\t' % (js['post'],sv[s]['peaks'])
 			oline += '%.2f\t%i\t%.0f\t' % (sv[s]['ri'],sum(js['ns']),score)
 			if 'mods' in js:
+				vmods = []
+				for m in sorted(js['mods'],key=itemgetter(1,0)):
+					if m[2] in mods_translation:
+						vmods.append('%s%i~%s;' % (m[0],m[1],mods_translation[m[2]]))
+					else:
+						vmods.append('%s%i#%.3f;' % (m[0],m[1],float(m[2])/1000))
 				mod_string = ''
-				for m in sorted(js['mods'],key=itemgetter(1)):
-					mod_string += '%s%i#%.3f;' % (m[0],m[1],m[2]/1000.0)
+				for v in vmods:
+					if v.find('[') != -1:
+						mod_string += v
+				for v in vmods:
+					if v.find('[') == -1 and v.find(']') == -1:
+						mod_string += v
+				for v in vmods:
+					if v.find(']') != -1:
+						mod_string += v
 				oline += re.sub('\;$','',mod_string)
 			last_i = s+1
 			if s in odict:
@@ -158,7 +184,7 @@ def report_ids(_ids,_p):
 		for t in odict[a]:
 			ps = t.split('\t')
 			if high >= round(float(ps[3])) >= low:
-				o.write('%i.%i\t%s\n' % (a,sub,t))
+				o.write('%i:%i\t%s\n' % (a,sub,t))
 				sub += 1
 				tot += 1
 			else:
