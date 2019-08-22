@@ -16,7 +16,7 @@ import itertools
 import hashlib
 import re
 
-def update_index(_info):
+def update_index(_info,_skip):
 	mhash = hashlib.sha256()
 	in_file = _info['input file']
 	out_file = _info['output file']
@@ -27,6 +27,7 @@ def update_index(_info):
 	of = open(out_file,'w',encoding='utf-8')
 	res = _info['residue']
 	mod_list = _info['modification mass']
+	acetyl_skip = _skip
 	for i,l in enumerate(f):
 		# print progress indicator
 		if i % 20000 == 0:
@@ -53,14 +54,26 @@ def update_index(_info):
 			mods = []
 			if 'mods' in js:
 				mods = js['mods']
+			skip = {m[1]-js['beg'] for m in mods if m[0] == res and m[2] != 114043}
 			for j,r in enumerate(seq):
 				if r == res:
-					dm += mod
-					mods.append([res,j+js['beg'],mod])
+					if acetyl_skip:
+						if j not in skip:
+							dm += mod
+							mods.append([res,j+js['beg'],mod])
+
+					else:
+						dm += mod
+						mods.append([res,j+js['beg'],mod])
 				bions[j] += dm
 			if ll == res:
-				dm += mod	
-				mods.append([res,js['end'],mod])
+				if acetyl_skip:
+					if len(seq) not in skip:
+						dm += mod	
+						mods.append([res,js['end'],mod])
+				else:
+					dm += mod	
+					mods.append([res,js['end'],mod])
 			js['pm'] += dm
 			js['bs'] = bions
 			yions = js['ys']
@@ -68,9 +81,14 @@ def update_index(_info):
 			seq = list(js['seq'])
 			seq.reverse()
 			seq.pop()
+			lv = len(seq)
 			for j,r in enumerate(seq):
 				if r == res:
-					dm += mod
+					if acetyl_skip:
+						if lv-j not in skip:
+							dm += mod
+					else:
+						dm += mod
 				yions[j] += dm
 			js['ys'] = yions
 			js['mods'] = mods
@@ -414,7 +432,18 @@ if sys.argv[4] == '-f':
 	elif info['residue'] == ']':
 		update_ct_index(info,0)
 	else:
-		update_index(info)
+		update_index(info,False)
+if sys.argv[4] == '-s':
+	if info['residue'] == '[':
+		update_nt_index(info,0)
+	elif len(info['residue']) == 2 and info['residue'].find('[') == 0:
+		update_bnt_index(info,0)
+	elif info['residue'] == '^':
+		update_pnt_index(info,0)
+	elif info['residue'] == ']':
+		update_ct_index(info,0)
+	else:
+		update_index(info,True)
 elif sys.argv[4] == '-v':
 	if info['residue'] == '[':
 		update_nt_index(info,1)
