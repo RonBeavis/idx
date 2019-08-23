@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<title>idX process launcher</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+body {
+  font-family: sans-serif;
+}
+a {
+  color: #369;
+}
+p {
+	padding-top: 10px;
+	padding-bottom: 0px;
+	margin-bottom: 10px;
+}
+li:not(:last-child) {
+    margin-bottom: 3px;
+}
+.note {
+  width: 600px;
+  margin: 20px auto;
+  font-size: 1.1em;
+  color: #333;
+  text-align: left;
+}
+.info {
+  width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: -20px;
+  margin-bottom: 2px;
+  font-size: 0.8em;
+  color: black;
+  text-align: left;
+  padding-top: 0px;
+}
+.copy {
+  width: 600px;
+  margin: 20px auto;
+  font-size: 1.1em;
+  color: #333;
+  text-align: left;
+  font-size: 10pt;
+}
+
+#drop-area {
+  border: 2px dashed #ccc;
+  border-radius: 20px;
+  width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #ddeedd;
+}
+#drop-area.highlight {
+  border-color: purple;
+}
+p {
+  margin-top: 0;
+}
+.my-form {
+  margin-bottom: 10px;
+}
+#gallery {
+  margin-top: 10px;
+}
+#gallery img {
+  width: 150px;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.button {
+  display: inline-block;
+  padding: 10px;
+  background: #ccc;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+.button:hover {
+  background: #ddd;
+}
+img.floatLeft { 
+    float: left; 
+    margin-top: 4px;
+    margin-bottom: 4px;
+    margin-left: 4px;
+    margin-right: 10px; 
+}
+#fileElem {
+  display: none;
+}
+	</style>
+
+</head>
+<body>
+<div id="drop-area">
+<form>
+<img class="floatLeft" src="/idx/idx.png" border="0" />
+<p>Type of experiment:</p>
+<input type="radio" value="hs-plain" name='etype' onChange="javascript: getElementById('etype').value=this.value" checked>Homo sapiens (trypin + IAA)<br />
+<input type="radio" value="hs-tmt" name='etype' onChange="javascript: getElementById('etype').value=this.value">Homo sapiens (trypin + IAA &amp; TMT6+)<br />
+<input id="etype" type="hidden" value="hs-plain" />
+<p>Fragment ion tolerance (mDa):</p>
+<input type="radio" value="high" name='itype' onChange="javascript: getElementById('resolution').value=this.value" checked>20
+<input type="radio" value="medium" name='itype' onChange="javascript: getElementById('resolution').value=this.value">50
+<input type="radio" value="low" name='itype' onChange="javascript: getElementById('resolution').value=this.value">400
+<input id="resolution" type="hidden" value="high" />
+</form><br /><br />
+  <form class="my-form">
+    <p>Drag an MGF file into this box</p>
+    <p>When the file is uploaded, idX will start</p>
+	<p>Requires a parent ion mass tolerance &le; &plusmn; 20 ppm</p>
+    <input type="file" id="fileElem" multiple accept="image/*" onchange="handleFiles(this.files)">
+	<input type="hidden" id="newname" name="newname" value="">
+<!--    <label class="button" for="fileElem">Select an MGF</label> -->
+  </form>
+  <progress id="progress-bar" max=100 value=0></progress>
+  <div id="gallery"></div>
+</div>
+<div class="info"><a id="show" href="javascript: toggleBox('info','show')">Show info</a> | tryptic peptides | <a href="/idx/hla.html">HLA peptides</a></div>
+<div id="info" style='display: none'>
+<div class="note"><b>Notes:</b></div>
+
+<div class="note">idX tests for the following modifications, in addition to those indicated above:
+<ol>
+<li>acetylation at lysine;</li>
+<li>ammonia-loss at peptide's N-terminal glutamine;</li>
+<li>ammonia-loss at peptide's N-terminal cysteine;</li>
+<li>deamidation at asparagine;</li>
+<li>dimethylation at argninine;</li>
+<li>hydroxyproline formation (collagens);</li>
+<li>hydroxylysine formation (collagens);</li>
+<li>oxidation at methionine;</li>
+<li>phosphorylation at serine;</li>
+<li>phosphorylation at threonine;</li>
+<li>phosphorylation at tyrosine;</li>
+<li>ubiquitinylation at lysine;</li>
+<li>removal of endoplasmic reticulum signal peptide;</li>
+<li>removal of mitochondrial targeting signal peptide; &amp;</li>
+<li>protein N-terminal co-translational modifications (incl. acetylation).</li>
+</ol>
+</div>
+<div class="note">This web site allows you to use idX for demonstration purposes. It is limited to analyzing the first 10,000 spectra 
+in a data file and the total number of simultaneous searches on the site is also limited. No spectrum files or output files are stored 
+on the site for any longer than necessary: for most sessions these files are deleted almost immediately. Some information is retained
+by the web server's log for security purposes and a record of the start and finish times of each idX run is also maintained. No cookies
+are used by this site.</div>
+
+<div class="note">idX <b>is not</b> an &quot;open&quot; search engine. It performs PSM assignments using peptide sequence kernels
+that have a combination of curated and uncurated modification annotations. The 9 billion PSM asignments in GPMDB have been used
+to guide this process. This sort of curation is technically a form of artificial intelligence, but it would be more
+accurate to describe it as a form of actual intelligence (although opinions may vary).</div>
+
+<div class="note">idX <b>is</b> open-source software. It is written in Python3 and it is available at 
+<a href="https://github.com/RonBeavis/idx" target="_blank">GitHub</a>.
+idX was designed to replace most of the arithmetic operations in conventional search engines with set-based mathematics. 
+Python's built-in <i>dictionary</i> objects are used to speed up many of the set comparison operations. idX is CLI software:
+this web site provides a simple, secure wrapper allowing you to use it remotely.</div>
+
+<div class="note">idX produces much less greenhouse gas than conventional search engines. Since it only requires one processor
+and it performs the analysis quickly, it requires much less electricity to generate results.</div>
+
+<div class="note">idX will appear to run faster with large data sets than it does with small ones. An MGF file with 10,000 MS/MS spectra 
+will generate a report in about 90 seconds, while an MGF with only 1 MS/MS spectrum will take 40 seconds to generate a report. 
+This behavior is because a significant amount of information is loaded from disk before an analysis can be performed, resulting in 
+an overhead time of nearly 40 seconds for each run. Once that information is loaded, the idX algorithm can sort through
+complicated lists of PTMs very quickly, resulting in relatively short total run times for large data sets.</div>
+
+<div class="note">Anyone interested in using idX for any commercial purposes, please contact us via email to <i>rbeavis at beavisinformatics.ca</i>. 
+You can follow any announcements made on Twitter at @NorSivaeb. </div>
+</div>
+<div class="copy">Copyright &copy; 2019 Ronald Beavis</div>
+<script type="text/javascript">
+function toggleBox(szDivID,aID)
+{
+	var obj = document.getElementById(szDivID);
+	var anchor = document.getElementById(aID);
+	if(!obj)	{
+		return;
+	}
+	if(obj.style.display == "none"){
+		obj.style.display = "block";
+		if(anchor)	{
+			anchor.innerHTML = anchor.innerHTML.replace("Show info","Hide info");
+		}
+	}
+	else{
+		obj.style.display = "none";
+		if(anchor)	{
+			anchor.innerHTML = anchor.innerHTML.replace("Hide info","Show info");
+		}
+	}
+}
+
+// ************************ Drag and drop ***************** //
+let dropArea = document.getElementById("drop-area")
+
+// Prevent default drag behaviors
+;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  dropArea.addEventListener(eventName, preventDefaults, false)   
+  document.body.addEventListener(eventName, preventDefaults, false)
+})
+
+// Highlight drop area when item is dragged over it
+;['dragenter', 'dragover'].forEach(eventName => {
+  dropArea.addEventListener(eventName, highlight, false)
+})
+
+;['dragleave', 'drop'].forEach(eventName => {
+  dropArea.addEventListener(eventName, unhighlight, false)
+})
+
+// Handle dropped files
+dropArea.addEventListener('drop', handleDrop, false)
+
+document.getElementById('newname').value = Date.now() + '.mgf'
+
+function preventDefaults (e) {
+  e.preventDefault()
+  e.stopPropagation()
+}
+
+function highlight(e) {
+  dropArea.classList.add('highlight')
+}
+
+function unhighlight(e) {
+  dropArea.classList.remove('active')
+}
+
+function handleDrop(e) {
+  var dt = e.dataTransfer
+  var files = dt.files
+
+  handleFiles(files)
+}
+
+let uploadProgress = []
+let progressBar = document.getElementById('progress-bar')
+
+function initializeProgress(numFiles) {
+  progressBar.value = 0
+  uploadProgress = []
+
+  for(let i = numFiles; i > 0; i--) {
+    uploadProgress.push(0)
+  }
+}
+
+function updateProgress(fileNumber, percent) {
+  uploadProgress[fileNumber] = percent
+  let total = uploadProgress.reduce((tot, curr) => tot + curr, 0) / uploadProgress.length
+  console.debug('update', fileNumber, percent, total)
+  progressBar.value = total
+}
+
+function handleFiles(files) {
+  files = [...files]
+  initializeProgress(files.length)
+  files.forEach(uploadFile)
+  files.forEach(previewFile)
+}
+
+function previewFile(file) {
+  let reader = new FileReader()
+  reader.readAsDataURL(file)
+  reader.onloadend = function() {
+    let img = document.createElement('img')
+    img.src = reader.result
+    document.getElementById('gallery').innerHTML = file.name
+  }
+}
+
+function uploadFile(file, i) {
+  var url = '/thegpm-cgi/upload.py'
+  var xhr = new XMLHttpRequest()
+  var formData = new FormData()
+  xhr.open('POST', url, true)
+  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest')
+
+  // Update progress (can be used to show progress indicator)
+  xhr.upload.addEventListener("progress", function(e) {
+    updateProgress(i, (e.loaded * 100.0 / e.total) || 100)
+  })
+
+  xhr.addEventListener('readystatechange', function(e) {
+    if (xhr.readyState == 4 && xhr.status == 200) {
+      updateProgress(i, 100) // <- Add this
+    }
+    else if (xhr.readyState == 4 && xhr.status != 200) {
+      // Error. Inform the user
+    }
+  })
+  xhr.addEventListener("load",  function(e) {
+    url = 'https://www.thegpm.org/thegpm-cgi/go.py?fn='
+	url += document.getElementById('gallery').innerHTML
+	url += '&nn=' + document.getElementById('newname').value
+	url += '&etype=' + document.getElementById('etype').value
+	url += '&res=' + document.getElementById('resolution').value
+	window.location.href = url
+})
+  formData.append('filename', file)
+  formData.append('newname', document.getElementById('newname').value)
+  xhr.send(formData)
+}
+</script>
+</body>
+</html>
