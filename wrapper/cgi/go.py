@@ -1,12 +1,5 @@
 #!c:/python36/python.exe
 
-#
-# Copyright © 2019 Ronald C. Beavis
-# Licensed under Apache License, Version 2.0, January 2004
-#
-# Part of the idx web wrapper
-#
-
 import cgi,cgitb
 import os
 import sys
@@ -21,8 +14,9 @@ def start_page():
 	print('''<!DOCTYPE html>
 <html lang="en" class="no-js">
 <head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="utf-8">
-<title>Drag and Drop File Uploading</title>
+<title>idX MS/MS to PSM processor</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
 	body {
@@ -143,13 +137,43 @@ print('<br />%s</div>' % (mod_text))
 print('<div class="display">')
 print('<p>Starting idX session ...</p>')
 sys.stdout.flush()
-mgf = 'f:/idx/s/%s' % (form['nn'].value)
+mgf = 'f:\idx\s\%s' % (form['nn'].value)
 display_mgf = form['fn'].value
-etype = form['etype'].value
+print('<p>Upload file: %s</p>' % (display_mgf))
+
 ofn = form['nn'].value + '.tsv'
 ofpath = 'f:\idx\o\%s' % (ofn)
 idxpath = 'f:\idx\idX.py'
 pythonpath = 'c:\python36\python.exe'
+if mgf.find('.raw') != -1:
+	param = [pythonpath, 'f:\idx\convert.py',form['nn'].value]
+	param = [pythonpath, 'f:\idx\convert.py','AD1_01.raw']
+	param = ['C:/Program Files/ProteoWizard/ProteoWizard 3.0.18172.8eb65f19f/msconvert.exe',mgf,'--outdir','f:\idx\s','--mgf','--filter','peakPicking true 2','--filter','msLevel 2',]
+	x = subprocess.Popen(param, stdout=subprocess.PIPE)
+	print('<hr class="top"/>')
+	print('<div class="d1" id="2">processing .raw file (sec) = 0</div>')
+	sys.stdout.flush()
+	raw_ok = False
+	secs = 0
+	while x.poll() == None:
+		print('<script>document.getElementById("2").innerHTML="processing .raw file (sec) = %i" </script>' % (secs))
+		sys.stdout.flush()
+		secs += 5
+		time.sleep(5)
+	print('<hr class="top"/>')
+	if secs == 0:
+		print('Could not process raw file')
+		print('<hr class="top" /><br /><p><a href="javascript: window.history.back();">Run another search</a></p>')
+		exit()
+	try:
+		os.remove(mgf)
+	except:
+		print('<p>Error deleting "%s"</p>' % (mgf))
+	mgf = re.sub('\.raw$','.mgf',mgf)
+	ofn = re.sub('\.raw','.mgf',ofn)
+	ofpath = re.sub('\.raw','.mgf',ofpath)
+
+etype = form['etype'].value
 resolution = form['res'].value
 ress = {'high': 20, 'medium': 50, 'low': 400}
 ipaddress = cgi.escape(os.environ["REMOTE_ADDR"])
@@ -169,8 +193,9 @@ if rows[0][0]+1 > max_threads:
 	conn.close()
 	print('Too many idX searches current active: try again later')
 	exit()
+current_sid = None
 if os.path.isfile(mgf):
-	print('<p>MGF data file: "%s" (%s B)</p>' % (display_mgf,format(os.path.getsize(mgf), ',d')))
+	print('<p>Processed data : %s B</p>' % (format(os.path.getsize(mgf), ',d')))
 	print('<!--%s-->' % (mgf))
 	print('<p>Total spectra limit: %i</p>' % (slimit))
 	dkernel = re.sub(r'.+\\','',kernels[etype])
@@ -248,12 +273,12 @@ if os.path.isfile(mgf):
 	
 	try:
 		os.remove(mgf)
-		print('<div class="d2" id="500"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MGF file "%s" cleared</i></div>' % (display_mgf))
+		print('<div class="d2" id="500"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Data file "%s" cleared</i></div>' % (display_mgf))
 	except:
-		print('<div class="d2" id="500"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MGF file "%s" could not be cleared</i></div>' % (display_mgf))
+		print('<div class="d2" id="500"><i>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Data file "%s" could not be cleared</i></div>' % (display_mgf))
 else:
 	ok = False
-	print('<p>MGF file "%s" not on server: process could not start</p>' % (mgf))
+	print('<p>Data file "%s" not on server: process could not start</p>' % (mgf))
 print('<hr class="top" />')
 print('<p>idX session complete: </p>')
 url = '/thegpm-cgi/results.py?fn=%s' % (ofn)
@@ -267,10 +292,11 @@ else:
 print('<hr class="top" /><br /><p><a href="javascript: window.history.back();">Run another search</a></p>')
 print('</div>')
 
-sql = 'UPDATE session set etime=?,active=? where sid=?'
-vals = (int(time.time()*1000),0,current_sid)
-curses.execute(sql,vals)
-conn.commit()
+if current_sid:
+	sql = 'UPDATE session set etime=?,active=? where sid=?'
+	vals = (int(time.time()*1000),0,current_sid)
+	curses.execute(sql,vals)
+	conn.commit()
 
 curses.close()
 conn.close()
