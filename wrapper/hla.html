@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="no-js">
 <head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta charset="utf-8">
 <title>idX process launcher</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -47,7 +48,7 @@ li:not(:last-child) {
 }
 
 #drop-area {
-  border: 2px dashed #ccc;
+  border: 4px dashed #666;
   border-radius: 20px;
   width: 600px;
   margin: 50px auto;
@@ -55,7 +56,7 @@ li:not(:last-child) {
   background-color: #ddeedd;
 }
 #drop-area.highlight {
-  border-color: purple;
+  border-color: #F104FB;
 }
 p {
   margin-top: 0;
@@ -119,8 +120,8 @@ img.floatLeft {
 	<input type="hidden" id="newname" name="newname" value="">
 <!--    <label class="button" for="fileElem">Select an MGF</label> -->
   </form>
-  <progress id="progress-bar" max=100 value=0></progress>
-  <div id="gallery"></div>
+  <progress id="progress-bar" style='width: 500px' max=100 value=0></progress>
+  <div><span id="original"></span><span id="gallery"></span></div>
 </div>
 <div class="info"><a id="show" href="javascript: toggleBox('info','show')">Show info</a> | <a href="/idx/index.html">tryptic peptides</a> | HLA peptides</div>
 <div id="info" style='display: none'>
@@ -139,7 +140,7 @@ img.floatLeft {
 </ol>
 
 </div>
-<div class="note">This web site allows you to use idX for demonstration purposes. It is limited to analyzing the first 10,000 spectra 
+<div class="note">This web site allows you to use idX for demonstration purposes. It is limited to analyzing the first 15,000 spectra 
 in a data file and the total number of simultaneous searches on the site is also limited. No spectrum files or output files are stored 
 on the site for any longer than necessary: for most sessions these files are deleted almost immediately. Some information is retained
 by the web server's log for security purposes and a record of the start and finish times of each idX run is also maintained. No cookies
@@ -212,8 +213,6 @@ let dropArea = document.getElementById("drop-area")
 // Handle dropped files
 dropArea.addEventListener('drop', handleDrop, false)
 
-document.getElementById('newname').value = Date.now() + '.mgf'
-
 function preventDefaults (e) {
   e.preventDefault()
   e.stopPropagation()
@@ -224,7 +223,7 @@ function highlight(e) {
 }
 
 function unhighlight(e) {
-  dropArea.classList.remove('active')
+  dropArea.classList.remove('highlight')
 }
 
 function handleDrop(e) {
@@ -249,7 +248,7 @@ function initializeProgress(numFiles) {
 function updateProgress(fileNumber, percent) {
   uploadProgress[fileNumber] = percent
   let total = uploadProgress.reduce((tot, curr) => tot + curr, 0) / uploadProgress.length
-  console.debug('update', fileNumber, percent, total)
+//  console.debug('update', fileNumber, percent, total)
   progressBar.value = total
 }
 
@@ -266,11 +265,31 @@ function previewFile(file) {
   reader.onloadend = function() {
     let img = document.createElement('img')
     img.src = reader.result
-    document.getElementById('gallery').innerHTML = file.name
   }
 }
 
 function uploadFile(file, i) {
+  fname = file.name
+  if(fname.indexOf('.raw') == fname.length - 4)	{
+    document.getElementById('original').innerHTML = fname + ' &rarr; '
+    document.getElementById('gallery').innerHTML = document.getElementById('newname').value
+    str = Math.floor(Math.random()*100000).toString()
+    document.getElementById('newname').value = Date.now() + "_" + str + '.raw'
+    document.getElementById('gallery').innerHTML = document.getElementById('newname').value
+  }
+  else if(fname.indexOf('.mgf') == fname.length - 4) {
+    document.getElementById('original').innerHTML =  fname + ' &rarr; '
+    document.getElementById('gallery').innerHTML = document.getElementById('newname').value
+    str = Math.floor(Math.random()*100000).toString()
+    document.getElementById('newname').value = Date.now() + "_" + str + '.mgf'
+    document.getElementById('gallery').innerHTML = document.getElementById('newname').value
+  }
+  else{
+    document.getElementById('original').innerHTML = ''
+    document.getElementById('gallery').innerHTML = ''
+	alert('File name must end in .mgf')
+    return
+  }
   var url = '/thegpm-cgi/upload.py'
   var xhr = new XMLHttpRequest()
   var formData = new FormData()
@@ -287,7 +306,8 @@ function uploadFile(file, i) {
       updateProgress(i, 100) // <- Add this
     }
     else if (xhr.readyState == 4 && xhr.status != 200) {
-      // Error. Inform the user
+      alert('Error communicating with server')
+	  return
     }
   })
   xhr.addEventListener("load",  function(e) {
