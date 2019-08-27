@@ -19,6 +19,40 @@ from operator import itemgetter
 # finds upper and lower limits for identification window
 #
 
+distribution = {800:[1.3,1.0,0.6],
+		900:[3.2,2.0,0.8],
+		1000:[4.9,2.7,1.0],
+		1100:[5.6,3.1,1.0],
+		1200:[6.2,3.3,1.1],
+		1300:[6.6,3.5,1.1],
+		1400:[7.1,3.8,1.2],
+		1500:[7.5,4.0,1.2],
+		1600:[7.8,4.1,1.3],
+		1700:[8.1,4.3,1.3],
+		1800:[8.2,4.4,1.3],
+		1900:[8.4,4.5,1.3],
+		2000:[8.5,4.6,1.3],
+		2100:[8.4,4.7,1.4],
+		2200:[8.6,4.7,1.4],
+		2300:[8.3,4.7,1.4],
+		2400:[8.2,4.6,1.4],
+		2500:[8.2,4.7,1.4],
+		2600:[8.1,4.8,1.4],
+		2700:[7.8,4.7,1.4],
+		2800:[7.5,4.7,1.4],
+		2900:[7.3,4.6,1.4],
+		3000:[7.3,4.7,1.5],
+		3100:[6.9,4.5,1.4],
+		3200:[6.5,4.4,1.4],
+		3300:[6.4,4.4,1.4],
+		3400:[5.8,4.1,1.4],
+		3500:[5.0,3.8,1.4],
+		3600:[5.5,4.1,1.4],
+		3700:[4.7,3.6,1.4],
+		3800:[4.2,3.3,1.4],
+		3900:[3.8,3.1,1.3],
+		4000:[3.7,3.0,1.3]	}
+
 def load_mods():
 	ls = [x.strip() for x in open('f:/idx/report_mods.txt','r')]
 	mods = {}
@@ -51,6 +85,21 @@ def find_window(_ppms):
 			high = i
 			break
 	return (low,high)
+
+def get_cells(_pm,_res):
+	global distribution
+	pm = 100*int(_pm/100000)
+	r = 2
+	if _res == 50:
+		r = 1
+	elif _res == 20:
+		r = 0
+	if pm < 800:
+		return int(pm*distribution[800][r])
+	if pm > 4000:
+		return int(pm*distribution[4000][r])
+	return int(pm*distribution[pm][r])
+
 #
 # applys the current statistical model for evaluating an
 # identification
@@ -58,26 +107,25 @@ def find_window(_ppms):
 
 def apply_model(_res,_seq,_pm,_ions,_lspectrum):
 	sfactor = 20
-	sadjust = 1
+	sadjust = 3
 	if _res > 100:
 		sfactor = 40
 	lseq = list(_seq)
-	pmass = int(_pm/1000)
-	cells = int(pmass-200)
-	if cells > 1500:
-		cells = 1500
+
+	cells = get_cells(_pm,_res)
 	total_ions = 2*(len(lseq) - 1)
 	if total_ions > sfactor:
 		total_ions = sfactor
 	if total_ions < _ions:
 		total_ions = _ions + 1
-	sc = _lspectrum
+	sc = _lspectrum * sadjust
 	if _ions >= sc:
 		sc = _ions + 2
-	rv = hypergeom(cells,total_ions,sc)
-	p = rv.pmf(_ions)
-	pscore = -100.0*math.log10(p)*sadjust
-	return pscore
+	hyper = hypergeom(cells,total_ions,sc)
+	p = hyper.pmf(_ions)
+	pscore = -100.0*math.log(p)/2.3
+#	print('%s: p=%.1e, cells=%i, total=%i, sc=%i, ions=%i, score=%.0f' % (_seq,p,cells,total_ions,sc,_ions,pscore))
+	return (pscore,p)
 
 #
 # formats the output of an idX job into a TSV file
@@ -104,9 +152,18 @@ def report_ids(_ids,_p):
 	else:
 		f = open(fname,'r', encoding='utf-8')
 	inferred = 0
+	specs = _p['spectra']
 	score_min = 200.0
+	if specs > 0:
+		score_min += 100*math.log(specs)/2.3
 	#read through the kernel file and extract required information
+	total_prob = 0.0
 	ppms = {}
+	min_c = 8
+	if res == 50:
+		min_c = 7
+	elif res == 20:
+		min_c = 6
 	for c,l in enumerate(f):
 		# check to see if line has information in _ids
 		if c != 0 and c % 2500 == 0:
@@ -127,15 +184,19 @@ def report_ids(_ids,_p):
 		last_i = 0
 		# create lines of output information
 		# and store in odict
+		max_prob = 0
+		prob = 0
 		for s in spectra:
 			delta = (sv[s]['pm']-js['pm'])/1000.0
 			ppm = 1.0e6*(sv[s]['pm']-js['pm'])/js['pm']
 			# update the "sub" identifier for an identification
 			# used to distiguish ids when there is more than
 			# oene kernel identified for a particular spectrum
-			score = apply_model(res,js['seq'],js['pm'],sv[s]['peaks'],sv[s]['ions'])
-			if score < score_min or sv[s]['ri'] < 0.20 or sv[s]['peaks'] < 8:
+			(score,prob) = apply_model(res,js['seq'],js['pm'],sv[s]['peaks'],sv[s]['ions'])
+			if score < score_min or sv[s]['ri'] < 0.20 or sv[s]['peaks'] < min_c:
 				continue
+			if prob > max_prob:
+				max_prob = prob
 			oline = '%i\t%.3f\t' % (sv[s]['sc'],js['pm']/1000.0)
 			oline += '%.3f\t%.1f\t' % (delta,ppm)
 			oline += '%i\t%s\t' % (sv[s]['pz'],js['lb'])
@@ -162,11 +223,13 @@ def report_ids(_ids,_p):
 						mod_string += v
 				oline += re.sub('\;$','',mod_string)
 			last_i = s+1
+			oline = re.sub(r'\tinf\t','\t5000\t',oline)
 			if s in odict:
 				odict[s].append(oline)
 			else:
 				odict[s] = [oline]
 			ppms[s] = ppm
+		total_prob += max_prob
 			
 	f.close()
 	# open the output file specified in _p
@@ -190,9 +253,13 @@ def report_ids(_ids,_p):
 			else:
 				err += 1
 	o.close()
-	print('\n\t     lines = %i' % (tot))
+	print('\n     lines = %i' % (tot))
+	if total_prob > 0:
+		print('     fpr = %.1e' % (total_prob*len(spectra)))
 	if low != -20 and high != 20:
 		ble = 100.0*((high-low)/41.0)*float(err)/float(tot)
-		print('\t       ble = %.1f%%' % (ble))
-	print('\tppm window = %i,%i' % (low,high))
+		print('     baseline error = %.1f%%' % (ble))
+	else:
+		print('     baseline error = n/a')
+	print('     parent ion tolerance = %i,%i' % (low,high))
 

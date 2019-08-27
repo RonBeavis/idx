@@ -124,6 +124,7 @@ def create_ids(_ki,_mi,_sp,_p):
 		ims = []
 		rm = float(s['pm'])
 		pm = int(0.5+rm/pt)
+		pz = int(s['pz'])
 		# check _ki for appropriate fragment ion matches
 		# and record a list of kernel identifiers for each match
 		# and the corresponding fragment ion intensities
@@ -136,6 +137,9 @@ def create_ids(_ki,_mi,_sp,_p):
 			for b,m in enumerate(s['sms']):
 				if m in ci:
 					idx = ci[m]
+					idi = s['ims'][b]
+				elif pz > 2 and m*2 in ci:
+					idx = ci[m*2]
 					idi = s['ims'][b]
 				else:
 					continue
@@ -227,7 +231,11 @@ def main():
 	spectra = []
 	# report files named on command line
 	print('\nstart ...\nidX parameters')
-	print('\t   max spectra: %i mDa' % (param['maximum spectra']))
+	if param['maximum spectra'] != -1:
+		print('\t   max spectra: %i mDa' % (param['maximum spectra']))
+	else:
+		print('\t   max spectra: unlimited')
+	
 	print('\t  fragment tol: %i mDa' % (param['fragment mass tolerance']))
 	print('\t    parent tol: %i ppm' % (param['parent mass tolerance']))
 	print('\t spectrum file: %s' % (sys.argv[1]))
@@ -245,6 +253,7 @@ def main():
 		print('exiting: 0 spectra found')
 		print('done')
 		exit()
+	param['spectra'] = len(spectra)
 	delta = time.time()-start
 	start = time.time()
 	print('\n\t   spectra = %i' % (len(spectra)))

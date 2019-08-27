@@ -175,8 +175,14 @@ def load_mgf(_in,_param):
 			js['ti'] = line
 			if line.find('scan=') != -1:
 				js['sc'] = int(re.sub('.+scan\=','',line))
-			else:
+			elif 'sc' not in js:
 				js['sc'] = s
+		elif  tag == 'SCANS':
+			line = re.sub('^SCANS=','',line)
+			try:
+				js['sc'] = int(line)
+			except:
+				pass
 	return sp
 #
 #	mzMLHandler necessary to XML SAX handler
