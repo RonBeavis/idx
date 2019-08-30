@@ -110,6 +110,14 @@ def get_mod_text(_t):
 		return '''Checks for:<ol><li>TMT6+ (n-t)</li><li>TMT6+ (K)</li><li>IAA (C)</li><li>acetyl (N-T)</li><li>acetyl (K)</li><li>phosphoryl (S)</li>
 		<li>phosphoryl (T)</li><li>phosphoryl (Y)</li><li>ubiquitinyl (K)</li><li>deamidated (N)</li><li>pyro (n-t Q)</li><li>pyro (n-t C)</li><li>oxidized (M)</li>
 		<li>hydroxyproline</li><li>hydroxylysine</li><li>dimethyl (R)</li><li>protein n-t</li><li>er signal</li><li>mito signal</li></ol>'''
+	if _t == 'mm-plain':
+		return '''Checks for:<ol><li>IAA (C)</li><li>acetyl (N-T)</li><li>acetyl (K)</li><li>phosphoryl (S)</li><li>phosphoryl (T)</li><li>
+		phosphoryl (Y)</li><li>ubiquitinyl (K)</li><li>deamidated (N)</li><li>pyro (n-t Q)</li><li>pyro (n-t C)</li><li>oxidized (M)</li><li>hydroxyproline</li>
+		<li>hydroxylysine</li><li>dimethyl (R)</li><li>protein n-t</li><li>er signal</li><li>mito signal</li></ol>'''
+	if _t == 'mm-tmt':
+		return '''Checks for:<ol><li>TMT6+ (n-t)</li><li>TMT6+ (K)</li><li>IAA (C)</li><li>acetyl (N-T)</li><li>acetyl (K)</li><li>phosphoryl (S)</li>
+		<li>phosphoryl (T)</li><li>phosphoryl (Y)</li><li>ubiquitinyl (K)</li><li>deamidated (N)</li><li>pyro (n-t Q)</li><li>pyro (n-t C)</li><li>oxidized (M)</li>
+		<li>hydroxyproline</li><li>hydroxylysine</li><li>dimethyl (R)</li><li>protein n-t</li><li>er signal</li><li>mito signal</li></ol>'''
 	if _t == 'hs-hla1':
 		return '''Checks for:<ol><li>acetyl (N-T)</li><li>cystine (C)</li><li>deamidated (N)</li><li>pyro (n-t Q)</li><li>oxidized (M)</li>
 		<li>hydroxyproline</li><li>hydroxylysine</li><li>dimethyl (R)</li></ol>'''
@@ -119,14 +127,25 @@ def get_mod_text(_t):
 	if _t == 'hs-hla1-2':
 		return '''Checks for:<ol><li>acetyl (N-T)</li><li>cystine (C)</li><li>deamidated (N)</li><li>pyro (n-t Q)</li><li>oxidized (M)</li>
 		<li>hydroxyproline</li><li>hydroxylysine</li><li>dimethyl (R)</li></ol>'''
+	if _t == 'mm-mhc1':
+		return '''Checks for:<ol><li>acetyl (N-T)</li><li>cystine (C)</li><li>deamidated (N)</li><li>pyro (n-t Q)</li><li>oxidized (M)</li>
+		<li>oxidized (W)</li><li>hydroxyproline</li><li>hydroxylysine</li><li>dimethyl (R)</li></ol>'''
+	if _t == 'mm-mhc2':
+		return '''Checks for:<ol><li>acetyl (N-T)</li><li>cystine (C)</li><li>deamidated (N)</li><li>pyro (n-t Q)</li><li>oxidized (M)</li>
+		<li>oxidized (W)</li><li>hydroxyproline</li><li>hydroxylysine</li><li>dimethyl (R)</li></ol>'''
+	if _t == 'mm-mhc1-2':
+		return '''Checks for:<ol><li>acetyl (N-T)</li><li>cystine (C)</li><li>deamidated (N)</li><li>pyro (n-t Q)</li><li>oxidized (M)</li>
+		<li>oxidized (W)</li><li>hydroxyproline</li><li>hydroxylysine</li><li>dimethyl (R)</li></ol>'''
 	return '''<br /><br /><br /><br /><br /><br /><br /><br /><br /><br /><br />'''
 	
 def end_page():
 	print('''</body>\n</html>\n''')
 	
-kernels = {'hs-plain': 'f:\idx\k\hs_plain.KR.kernel', 'hs-tmt': 'f:\idx\k\hs_tmt.KR.kernel',
-			'hs-hla1': 'f:\idx\k\hla_class1.kernel', 'hs-hla2': 'f:\idx\k\hla_class2.kernel',
-			'hs-hla1-2': 'f:\idx\k\hla_class1+2.kernel'}
+kernels = {'hs-plain': 'f:\cidx\k\hs_plain.KR.kernel', 'hs-tmt': 'f:\cidx\k\hs_tmt.KR.kernel',
+			'hs-hla1': 'f:\cidx\k\hla_class1.kernel', 'hs-hla2': 'f:\cidx\k\hla_class2.kernel',
+			'hs-hla1-2': 'f:\cidx\k\hla_class1+2.kernel','mm-plain': 'f:\cidx\k\mm_plain.KR.kernel',
+			'mm-tmt': 'f:\cidx\k\mm_tmt.KR.kernel','mm-mhc1': 'f:\cidx\k\mm_mhc_class1.kernel', 
+			'mm-mhc2': 'f:\cidx\k\mm_mhc_class2.kernel','mm-mhc1-2': 'f:\cidx\k\mm_mhc_class1+2.kernel'}
 	
 form = cgi.FieldStorage()
 print('Content-type: text/html\n\n')
@@ -137,18 +156,16 @@ print('<br />%s</div>' % (mod_text))
 print('<div class="display">')
 print('<p>Starting idX session ...</p>')
 sys.stdout.flush()
-mgf = 'f:\idx\s\%s' % (form['nn'].value)
+mgf = 'f:\cidx\s\%s' % (form['nn'].value)
 display_mgf = form['fn'].value
 print('<p>Upload file: %s</p>' % (display_mgf))
 
 ofn = form['nn'].value + '.tsv'
-ofpath = 'f:\idx\o\%s' % (ofn)
-idxpath = 'f:\idx\idX.py'
+ofpath = 'f:\cidx\o\%s' % (ofn)
+idxpath = 'f:\cidx\idX.py'
 pythonpath = 'c:\python36\python.exe'
 if mgf.find('.raw') != -1:
-	param = [pythonpath, 'f:\idx\convert.py',form['nn'].value]
-	param = [pythonpath, 'f:\idx\convert.py','AD1_01.raw']
-	param = ['C:/Program Files/ProteoWizard/ProteoWizard 3.0.18172.8eb65f19f/msconvert.exe',mgf,'--outdir','f:\idx\s','--mgf','--filter','peakPicking true 2','--filter','msLevel 2',]
+	param = ['C:/Program Files/ProteoWizard/ProteoWizard 3.0.18172.8eb65f19f/msconvert.exe',mgf,'--outdir','f:\cidx\s','--mgf','--filter','peakPicking true 2','--filter','msLevel 2',]
 	x = subprocess.Popen(param, stdout=subprocess.PIPE)
 	print('<hr class="top"/>')
 	print('<div class="d1" id="2">processing .raw file (sec) = 0</div>')
@@ -173,13 +190,36 @@ if mgf.find('.raw') != -1:
 	ofn = re.sub('\.raw','.mgf',ofn)
 	ofpath = re.sub('\.raw','.mgf',ofpath)
 
+if mgf.find('.cmn') != -1:
+	temp = re.sub('\.cmn$','.mgf',mgf)
+	param = ['C:/bin/common.exe','-f%s' %(mgf),'-o%s' % (temp),'-dmgf']
+	x = subprocess.Popen(param, stdout=subprocess.PIPE)
+	print('<hr class="top"/>')
+	print('<div class="d1" id="2">processing .cmn file (sec) = 0</div>')
+	sys.stdout.flush()
+	raw_ok = False
+	secs = 0
+	while x.poll() == None:
+		print('<script>document.getElementById("2").innerHTML="processing .cmn file (sec) = %i" </script>' % (secs))
+		sys.stdout.flush()
+		secs += 1
+		time.sleep(1)
+	print('<hr class="top"/>')
+	try:
+		os.remove(mgf)
+	except:
+		print('<p>Error deleting "%s"</p>' % (mgf))
+	mgf = re.sub('\.cmn$','.mgf',mgf)
+	ofn = re.sub('\.cmn','.mgf',ofn)
+	ofpath = re.sub('\.cmn','.mgf',ofpath)
+
 etype = form['etype'].value
 resolution = form['res'].value
 ress = {'high': 20, 'medium': 50, 'low': 400}
 ipaddress = cgi.escape(os.environ["REMOTE_ADDR"])
-slimit = 15000
+slimit = 20000
 try:
-	conn = sqlite3.connect('f:\idx\db\idx.db')
+	conn = sqlite3.connect('f:\cidx\db\idx.db')
 	curses = conn.cursor()
 except:
 	print('SQLITE3 connection failure')
@@ -205,7 +245,7 @@ if os.path.isfile(mgf):
 		print('<p>Fragment tolerance: %i mDa</p>' % (ress[resolution]))
 	param = [pythonpath, '-u', idxpath, mgf, kernels[etype], ofpath ,resolution,'%i' % (slimit)]
 	print('<hr class="top"/>')
-	x = subprocess.Popen(param, stdout=subprocess.PIPE)
+	x = subprocess.Popen(param, stdout=subprocess.PIPE, cwd='f:\cidx')
 	sql = 'INSERT INTO session(stime,etime,pid,ofile,ifile,etype,userid,active,ip) values(?,?,?,?,?,?,?,?,?)'
 	vals = (int(time.time()*1000),None,x.pid,ofn,display_mgf,etype,None,1,ipaddress)
 	curses.execute(sql,vals)
@@ -265,10 +305,12 @@ if os.path.isfile(mgf):
 			break
 		elif m.find('lines = ') != -1:
 			print('<div class="d2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s</div>' % (m[m.find('lines = '):]))
-		if m.find('ble = ') != -1:
-			print('<div class="d2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s</div>' % (m[m.find('ble = '):]))
-		if m.find('ppm window = ') != -1:
-			print('<div class="d2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s</div>' % (m[m.find('ppm window = '):]))
+		if m.find('fpr = ') != -1:
+			print('<div class="d2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s</div>' % (m[m.find('fpr = '):]))
+		if m.find('baseline error = ') != -1:
+			print('<div class="d2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s</div>' % (m[m.find('baseline error = '):]))
+		if m.find('parent ion tolerance = ') != -1:
+			print('<div class="d2">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s</div>' % (m[m.find('parent ion tolerance = '):]))
 		m = x.stdout.readline().decode('utf8')
 	
 	try:

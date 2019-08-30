@@ -6,7 +6,7 @@ import time
 
 form = cgi.FieldStorage()
 fn = form['fn'].value
-ifile = 'f:\idx\o\%s' % (fn)
+ifile = 'f:\cidx\o\%s' % (fn)
 if os.path.isfile(ifile):
 	f = open(ifile,'r')
 else:
