@@ -123,7 +123,11 @@ img.floatLeft {
   <progress id="progress-bar" style='width: 500px' max=100 value=0></progress>
   <div><span id="original"></span><span id="gallery"></span></div>
 </div>
-<div class="info"><a id="show" href="javascript: toggleBox('info','show')">Show info</a> | <a href="/idx/index.html">tryptic peptides</a> | HLA peptides</div>
+<div class="info">
+<a id="show" href="javascript: toggleBox('info','show')">Show info</a> &#8226; 
+<b>tryptic peptides:</b> (<a href="/idx/index.html">human</a> | <a href="/idx/mm.html">mouse</a>) &#8226;
+<b>MHC peptides:</b> (human  | <a href="/idx/mm_mhc.html">mouse</a>)
+</div>
 <div id="info" style='display: none'>
 <div class="note"><b>Notes:</b></div>
 
@@ -254,6 +258,9 @@ function updateProgress(fileNumber, percent) {
 
 function handleFiles(files) {
   files = [...files]
+  document.getElementById('original').innerHTML = ''
+  document.getElementById('gallery').innerHTML = ''
+  document.getElementById('newname').value = ''
   initializeProgress(files.length)
   files.forEach(uploadFile)
   files.forEach(previewFile)
@@ -275,6 +282,13 @@ function uploadFile(file, i) {
     document.getElementById('gallery').innerHTML = document.getElementById('newname').value
     str = Math.floor(Math.random()*100000).toString()
     document.getElementById('newname').value = Date.now() + "_" + str + '.raw'
+    document.getElementById('gallery').innerHTML = document.getElementById('newname').value
+  }
+  else if(fname.indexOf('.cmn') == fname.length - 4)	{
+    document.getElementById('original').innerHTML = fname + ' &rarr; '
+    document.getElementById('gallery').innerHTML = document.getElementById('newname').value
+    str = Math.floor(Math.random()*100000).toString()
+    document.getElementById('newname').value = Date.now() + "_" + str + '.cmn'
     document.getElementById('gallery').innerHTML = document.getElementById('newname').value
   }
   else if(fname.indexOf('.mgf') == fname.length - 4) {

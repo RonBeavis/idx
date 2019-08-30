@@ -53,7 +53,7 @@ li:not(:last-child) {
   width: 600px;
   margin: 50px auto;
   padding: 20px;
-  background-color: #ddeedd;
+  background-color: #ffddff;
 }
 #drop-area.highlight {
   border-color: #F104FB;
@@ -102,9 +102,9 @@ img.floatLeft {
 <form>
 <img class="floatLeft" src="/idx/idx.png" border="0" />
 <p>Type of experiment:</p>
-<input type="radio" value="hs-plain" name='etype' onChange="javascript: getElementById('etype').value=this.value" checked>Homo sapiens (trypin + IAA)<br />
-<input type="radio" value="hs-tmt" name='etype' onChange="javascript: getElementById('etype').value=this.value">Homo sapiens (trypin + IAA &amp; TMT6+)<br />
-<input id="etype" type="hidden" value="hs-plain" />
+<input type="radio" value="mm-plain" name='etype' onChange="javascript: getElementById('etype').value=this.value" checked>Mus musculus (trypin + IAA)<br />
+<input type="radio" value="mm-tmt" name='etype' onChange="javascript: getElementById('etype').value=this.value">Mus musculus (trypin + IAA &amp; TMT6+)<br />
+<input id="etype" type="hidden" value="mm-plain" />
 <p>Fragment ion tolerance (mDa):</p>
 <input type="radio" value="high" name='itype' onChange="javascript: getElementById('resolution').value=this.value" checked>20
 <input type="radio" value="medium" name='itype' onChange="javascript: getElementById('resolution').value=this.value">50
@@ -124,7 +124,7 @@ img.floatLeft {
 </div>
 <div class="info">
 <a id="show" href="javascript: toggleBox('info','show')">Show info</a> &#8226; 
-<b>tryptic peptides:</b> (human | <a href="/idx/mm.html">mouse</a>) &#8226;
+<b>tryptic peptides:</b> (<a href="/idx/index.html">human</a> | mouse) &#8226;
 <b>MHC peptides:</b> (<a href="/idx/hla.html">human</a> | <a href="/idx/mm_mhc.html">mouse</a>)
 </div>
 <div id="info" style='display: none'>
@@ -140,6 +140,7 @@ img.floatLeft {
 <li>hydroxyproline formation (collagens);</li>
 <li>hydroxylysine formation (collagens);</li>
 <li>oxidation at methionine;</li>
+<li>oxidation at tryptophan;</li>
 <li>phosphorylation at serine;</li>
 <li>phosphorylation at threonine;</li>
 <li>phosphorylation at tyrosine;</li>
