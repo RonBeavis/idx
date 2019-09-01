@@ -208,7 +208,10 @@ def report_ids(_ids,_p):
 			oline += '%i\t%i\t' % (js['beg'],js['end'])
 			oline += '%s\t%s\t' % (js['pre'],js['seq'])
 			oline += '%s\t%i\t' % (js['post'],sv[s]['peaks'])
-			oline += '%.2f\t%i\t%.0f\t' % (sv[s]['ri'],sum(js['ns']),score)
+			if sum(js['ns']) > 0:
+				oline += '%.2f\t%.1f\t%.1f\t' % (sv[s]['ri'],math.log(sum(js['ns']))/2.3,-0.01*score)
+			else:
+				oline += '%.2f\t-\t%.1f\t' % (sv[s]['ri'],-0.01*score)
 			if 'mods' in js:
 				vmods = []
 				for m in sorted(js['mods'],key=itemgetter(1,0)):
@@ -241,7 +244,7 @@ def report_ids(_ids,_p):
 	o = open(_p['output file'],'w')
 	# create the header line
 	oline = 'Id\tScan\tPeptide mass\tDelta\tppm\tz\tProtein acc\t'
-	oline += 'Start\tEnd\tPre\tSequence\tPost\tIC\tRI\tFreq\tScore\tModifications\n'
+	oline += 'Start\tEnd\tPre\tSequence\tPost\tIC\tRI\tlog(f)\tlog(p)\tModifications\n'
 	o.write(oline)
 	# output the lines in odict, sorted by id number
 	tot = 0
