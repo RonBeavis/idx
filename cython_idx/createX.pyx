@@ -14,7 +14,7 @@ import time
 import gzip
 import sys
 import datetime
-
+import struct
 #
 # generate identifications of spectra, based on the kernel indexes
 #
@@ -58,17 +58,21 @@ def create_ids(_ki,_mi,_sp,_p):
 			for b,m in enumerate(s['sms']):
 				m2 = m * 2
 				if m in ci:
-					idx = ci[m]
+#					idx = list(struct.unpack('!%dI' % (len(ci[m])/4),ci[m]))
+					idx = ci[m].split(' ')
 					idi = s['ims'][b]
 				elif use2 and m2 > 1000000 and m2 in ci:
-					idx = ci[m2]
+#					idx = list(struct.unpack('!%dI' % (len(ci[m2])/4),ci[m2]))
+					idx = ci[m2].split(' ')
 					idi = s['ims'][b]
 				elif use3 and m2 in ci:
-					idx = ci[m2]
+#					idx = list(struct.unpack('!%dI' % (len(ci[m2])/4),ci[m2]))
+					idx = ci[m2].split(' ')
 					idi = s['ims'][b]
 				else:
 					continue
-				ident.append(idx)
+				idx.pop()
+				ident.append([int(q) for q in idx])
 				ims.append(idi)
 				ms.append(rm)
 		if rm > 1500000:
@@ -83,17 +87,21 @@ def create_ids(_ki,_mi,_sp,_p):
 				for b,m in enumerate(s['sms']):
 					m2 = m * 2
 					if m in ci:
-						idx = ci[m]
+#						idx = list(struct.unpack('!%dI' % (len(ci[m])/4),ci[m]))
+						idx = ci[m].split(' ')
 						idi = s['ims'][b]
 					elif use2 and m2 > 1000000 and m2 in ci:
-						idx = ci[m2]
+#						idx = list(struct.unpack('!%dI' % (len(ci[m2])/4),ci[m2]))
+						idx = ci[m2].split(' ')
 						idi = s['ims'][b]
 					elif use3 and m2 in ci:
-						idx = ci[m2]
+#						idx = list(struct.unpack('!%dI' % (len(ci[m2])/4),ci[m2]))
+						idx = ci[m2].split(' ')
 						idi = s['ims'][b]
 					else:
 						continue
-					ident.append(idx)
+					idx.pop()
+					ident.append([int(q) for q in idx])
 					ims.append(idi)
 					ms.append(rm)
 		if len(ident) == 0:
