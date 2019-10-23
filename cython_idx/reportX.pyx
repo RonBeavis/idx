@@ -243,7 +243,7 @@ def report_ids(_ids,_p):
 	# open the output file specified in _p
 	o = open(_p['output file'],'w')
 	# create the header line
-	oline = 'Id\tScan\tPeptide mass\tDelta\tppm\tz\tProtein acc\t'
+	oline = 'Id\tSub\tScan\tPeptide mass\tDelta\tppm\tz\tProtein acc\t'
 	oline += 'Start\tEnd\tPre\tSequence\tPost\tIC\tRI\tlog(f)\tlog(p)\tModifications\n'
 	o.write(oline)
 	# output the lines in odict, sorted by id number
@@ -255,7 +255,7 @@ def report_ids(_ids,_p):
 		for t in odict[a]:
 			ps = t.split('\t')
 			if high >= round(float(ps[3])) >= low:
-				o.write('%i:%i\t%s\n' % (a,sub,t))
+				o.write('%i\t%i\t%s\n' % (a,sub,t))
 				sub += 1
 				tot += 1
 			else:

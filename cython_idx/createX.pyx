@@ -4,7 +4,7 @@
 #
 # Identifies kernels corresponding to spectra
 #
-# idX version 2019.08.10.02
+# idX version 2019.10.23.01
 #
 from __future__ import print_function
 from libcpp cimport bool as bool_t
@@ -22,12 +22,15 @@ import struct
 def create_ids(_ki,_mi,_sp,_p):
 	# initialize list of identifications
 	ids = []
-	z = 1
-	pt = 70
-	ppm = _p['parent mass tolerance']/1.0e06
+	cdef int z = 1
+	cdef double pt = 1.0/70.0
+	cdef double ppm = _p['parent mass tolerance']/1.0e06
 	dvals = (-1,0,1)
-	count = 0
-	c13 = 1003
+	cdef int count = 0
+	cdef double c13 = 1003.0
+	cdef double rm = 0.0
+	cdef int pm = 0
+	cdef int pz = 0
 	# iterate through spectra
 	for c,s in enumerate(_sp):
 		if c != 0 and c % 50 == 0:
@@ -39,7 +42,7 @@ def create_ids(_ki,_mi,_sp,_p):
 		ident = []
 		ims = []
 		rm = float(s['pm'])
-		pm = int(0.5+rm/pt)
+		pm = int(0.5+rm*pt)
 		pz = int(s['pz'])
 		# check _ki for appropriate fragment ion matches
 		# and record a list of kernel identifiers for each match
@@ -49,35 +52,11 @@ def create_ids(_ki,_mi,_sp,_p):
 		use2 = (pm > 1500000 and pz == 2)
 		use3 = (pz > 2)
 		ms = []
-		for d in dvals:
-			if pm+d in _ki:
-				ci = _ki[pm+d]
-				pass
-			else:
-				continue
-			for b,m in enumerate(s['sms']):
-				m2 = m * 2
-				if m in ci:
-#					idx = list(struct.unpack('!%dI' % (len(ci[m])/4),ci[m]))
-					idx = ci[m].split(' ')
-					idi = s['ims'][b]
-				elif use2 and m2 > 1000000 and m2 in ci:
-#					idx = list(struct.unpack('!%dI' % (len(ci[m2])/4),ci[m2]))
-					idx = ci[m2].split(' ')
-					idi = s['ims'][b]
-				elif use3 and m2 in ci:
-#					idx = list(struct.unpack('!%dI' % (len(ci[m2])/4),ci[m2]))
-					idx = ci[m2].split(' ')
-					idi = s['ims'][b]
-				else:
-					continue
-				idx.pop()
-				ident.append([int(q) for q in idx])
-				ims.append(idi)
-				ms.append(rm)
+		mvs = [rm]
 		if rm > 1500000:
-			rm -= c13
-			cpm = int(0.5+rm/pt)
+			mvs.append(rm-c13)
+		for rm in mvs:	
+			cpm = int(0.5+rm*pt)
 			for d in dvals:
 				if cpm+d in _ki:
 					ci = _ki[cpm+d]
@@ -87,15 +66,12 @@ def create_ids(_ki,_mi,_sp,_p):
 				for b,m in enumerate(s['sms']):
 					m2 = m * 2
 					if m in ci:
-#						idx = list(struct.unpack('!%dI' % (len(ci[m])/4),ci[m]))
 						idx = ci[m].split(' ')
 						idi = s['ims'][b]
 					elif use2 and m2 > 1000000 and m2 in ci:
-#						idx = list(struct.unpack('!%dI' % (len(ci[m2])/4),ci[m2]))
 						idx = ci[m2].split(' ')
 						idi = s['ims'][b]
 					elif use3 and m2 in ci:
-#						idx = list(struct.unpack('!%dI' % (len(ci[m2])/4),ci[m2]))
 						idx = ci[m2].split(' ')
 						idi = s['ims'][b]
 					else:
