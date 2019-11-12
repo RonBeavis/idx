@@ -1,5 +1,10 @@
 /*
- Copyright © 2019 Ronald C Beavis, all rights reserved
+#
+# Copyright © 2019 Ronald C. Beavis
+# Licensed under Apache License, Version 2.0, January 2004
+#
+# Loads a spectrum file into a vector of spectrum objects
+#
 */
 
 #include "nlohmann/json.hpp"
