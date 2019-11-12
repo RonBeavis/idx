@@ -7,7 +7,6 @@
 #
 */
 
-#include "nlohmann/json.hpp"
 #include <fstream>
 #include <cstdio>
 #include <iostream>

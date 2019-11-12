@@ -7,11 +7,11 @@
 #
 */
 
-#include "nlohmann/json.hpp"
 #include <iostream>
 #include <cstdio>
 #include <sys/stat.h>
 #include <string>
+#include <cstring>
 #include <map>
 #include <set>
 #include <vector>
@@ -20,8 +20,7 @@
 using namespace std;
 using namespace std::chrono;
 #include "load_spectra.hpp"
-
-
+#include "load_kernel.hpp"
 
 // for convenience
 int main(int argc, char* argv[])	{
@@ -30,8 +29,6 @@ int main(int argc, char* argv[])	{
 		return 0;
 	}
 	map<string,string> params;
-	vector<spectrum> spectra;
-	using json = nlohmann::json;
 	string version = "idX, 2020.1";
 	params["version"] = version;
 
@@ -90,6 +87,7 @@ int main(int argc, char* argv[])	{
 	cout << "\t       version: " << version << "\n";
 	cout << "load & index spectra"  << "\n";
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
+	vector<spectrum> spectra;
 	load_spectra ls;
 	if(!ls.load(params,spectra))	{
 		cout << "Error (idx:0003): failed to load spectrum file \"" << spectrum_file << "\"\n";
@@ -97,11 +95,19 @@ int main(int argc, char* argv[])	{
 	}
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	cout << "spectra: " << spectra.size() << "\n";
-	cout << "elapsed time: " << duration_cast<milliseconds>(t2 - t1).count() << " ms\n";
+	cout << "elapsed time: " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
+	t1 = high_resolution_clock::now();
+	cout << "load & index kernel"  << "\n";
+	vector<kernel> kernels;
+	map<long,long> mindex;
+	load_kernel lk;
+	if(!lk.load(params,spectra,kernels,mindex))	{
+		cout << "Error (idx:0005): failed to load kernel file \"" << spectrum_file << "\"\n";
+		return 0;
+	}
+	t2 = high_resolution_clock::now();
+	cout << "kernels: " << mindex.size() << "\n";
+	cout << "elapsed time: " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
 	return 0;
-//	auto j3 = json::parse("{ \"happy\": true, \"pi\": 3.141 }");
-//	cout << j3.dump(1) << "\n";
-//	cout << j3["happy"] << "\n";
-//	cout << j3["pi"] << "\n";
 }
 

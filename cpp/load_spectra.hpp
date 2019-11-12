@@ -8,6 +8,7 @@
 */
 
 #include <algorithm>
+#include <cmath>
 
 class spectrum
 {
