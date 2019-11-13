@@ -15,6 +15,7 @@ public:
 	kernels(void)	{}
 	virtual ~kernels(void)	{}
 	unordered_map<unsigned int,unordered_map<unsigned int,vector<unsigned int> > > kindex;
+	long size(void)	{ return (long)kindex.size();}
 //	kernel& operator=(const kernel &rhs)	{
 //		
 //	}

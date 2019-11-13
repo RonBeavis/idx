@@ -125,8 +125,12 @@ bool load_spectra::load(map<string,string>& _params,vector<spectrum>& _spectra)	
 			parent = 0.0;
 			charge = 0.0;
 			s++;
-			if(s % 1000 == 0)	{
-				cout << ".";
+			if(s % 2500 == 0)	{
+				cout << '.';
+				cout.flush();
+			}
+			if(s != 0 and s % 50000 == 0)	{
+				cout << ' ' << s << endl;
 				cout.flush();
 			}
 			scan = 0;

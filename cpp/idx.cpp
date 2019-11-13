@@ -95,8 +95,8 @@ int main(int argc, char* argv[])	{
 		return 0;
 	}
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
-	cout << "spectra: " << spectra.size() << "\n";
-	cout << "elapsed time: " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
+	cout << "	   spectra = " << spectra.size() << "\n";
+	cout << "	spectra &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
 	t1 = high_resolution_clock::now();
 	cout << "load & index kernel"  << "\n";
 	kernels kindex;
@@ -107,8 +107,8 @@ int main(int argc, char* argv[])	{
 		return 0;
 	}
 	t2 = high_resolution_clock::now();
-	cout << "kernels: " << mindex.size() << "\n";
-	cout << "elapsed time: " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
+	cout << "	   kernels = " << kindex.size() << "\n";
+	cout << "	kernels &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
 	return 0;
 }
 

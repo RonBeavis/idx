@@ -42,7 +42,6 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 	auto itsp = sp_set.end();
 	string line;
 	using namespace rapidjson;
-	long s = 0;
 	long skipped = 0;
 	long hmatched = 0;
 	long pm = 0;
@@ -51,29 +50,35 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 	long u = 0;
 	const long c13 = 1003;
 	unsigned int val = 0;
+	long found = 0;
+	long lines = 0;
 	while(getline(istr,line))	{
-//		auto js = json::parse(line);
-//		auto ij = js.find("pm");
+		if(lines != 0 && lines % 2500 == 0)	{
+			cout << '.';
+			cout.flush();
+		}
+		if(lines != 0 && lines % 50000 == 0)	{
+			cout << " " << lines << endl;
+			cout.flush();
+		}
+		lines++;
 		Document js;
     		js.Parse(line.c_str(),line.length());
 		if(!js.HasMember("pm"))	{
 			continue;
 		}
-		s++;
-		if(s % 10000 == 0)	{
-			cout << ".";
-			cout.flush();
-		}
-		if(js["u"] != js["h"])	{
+		if(js["u"].GetInt() != js["h"].GetInt())	{
 			hmatched++;
 			continue;
 		}
 		pm = (long)js["pm"].GetInt();
 		mv = (long)(0.5+pm*pt);
 		cv = (long)(0.5+(pm+c13)*pt);
-		if(sp_set.find(mv) == itsp or sp_set.find(mv-1) == itsp or sp_set.find(mv+1) == itsp)	{
+		if(sp_set.find(mv) != itsp || sp_set.find(mv+1) != itsp || sp_set.find(mv-1) != itsp)	{
+			found++;
 		}
-		else if(pm > 1500000 and (sp_set.find(cv) == itsp or sp_set.find(cv-1) == itsp or sp_set.find(cv+1) == itsp))	{
+		else if(pm > 1500000 && (sp_set.find(cv) != itsp || sp_set.find(cv+1) != itsp || sp_set.find(cv-1) != itsp))	{
+			found++;
 		}
 		else	{
 			skipped += 1;
@@ -102,7 +107,7 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 		}
 	}
 	cout << "\n";
-	cout << "skipped: " << skipped << ", hmatches: " << hmatched << endl;
+//	cout << "skipped: " << skipped << ", hmatches: " << hmatched << ", found: " << found << ", lines: " << lines << endl;
 	cout.flush();
 	istr.close();
 	return true;
