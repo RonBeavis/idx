@@ -22,7 +22,7 @@ public:
 	long isum;
 	vector<pair<long,long>> mis;
 	string desc;
-	bool clear()	{sc = 0;pm = 0; pi = 0; pz = 0; sc=0; desc = ""; mis.clear();}
+	bool clear()	{sc = 0;pm = 0; pi = 0; pz = 0; sc=0; desc = ""; mis.clear();return true;}
 	spectrum& operator=(const spectrum &rhs)	{
 		mis.clear();
 		pm = rhs.pm;

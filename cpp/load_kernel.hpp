@@ -9,13 +9,14 @@
 
 #include <algorithm>
 
-class kernel
+class kernels
 {
 public:
-	kernel(void)	{}
-	virtual ~kernel(void)	{}
-	bool clear()	{}
+	kernels(void)	{}
+	virtual ~kernels(void)	{}
+	unordered_map<unsigned int,unordered_map<unsigned int,vector<unsigned int> > > kindex;
 //	kernel& operator=(const kernel &rhs)	{
+//		
 //	}
 };
 
@@ -24,7 +25,7 @@ class load_kernel
 public:
 	load_kernel(void);
 	virtual ~load_kernel(void);
-	bool load(map<string,string>& _p,vector<spectrum>& _s,vector<kernel>& _k,map<long,long>& _m);
+	bool load(map<string,string>& _p,vector<spectrum>& _s,kernels& _k,map<long,long>& _m);
 };
 
 

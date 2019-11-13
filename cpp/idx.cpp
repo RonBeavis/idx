@@ -6,13 +6,14 @@
 # Identifies kernels corresponding to spectra
 #
 */
-
+// #include "pch.h"
 #include <iostream>
 #include <cstdio>
 #include <sys/stat.h>
 #include <string>
 #include <cstring>
 #include <map>
+#include <unordered_map>
 #include <set>
 #include <vector>
 #include <ctime>
@@ -98,10 +99,10 @@ int main(int argc, char* argv[])	{
 	cout << "elapsed time: " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
 	t1 = high_resolution_clock::now();
 	cout << "load & index kernel"  << "\n";
-	vector<kernel> kernels;
+	kernels kindex;
 	map<long,long> mindex;
 	load_kernel lk;
-	if(!lk.load(params,spectra,kernels,mindex))	{
+	if(!lk.load(params,spectra,kindex,mindex))	{
 		cout << "Error (idx:0005): failed to load kernel file \"" << spectrum_file << "\"\n";
 		return 0;
 	}
