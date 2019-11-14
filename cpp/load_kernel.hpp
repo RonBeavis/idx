@@ -16,6 +16,11 @@ public:
 	virtual ~kernels(void)	{}
 	unordered_map<unsigned int,unordered_map<unsigned int,vector<unsigned int> > > kindex;
 	long size(void)	{ return (long)kindex.size();}
+	bool add_map(long _m)	{ kindex.insert(pair<unsigned int,
+						unordered_map<unsigned int,vector<unsigned int> > >(_m,
+						unordered_map<unsigned int,vector<unsigned int> >()));}
+	bool add_pair(long _mv,long _val) { kindex[_mv].insert(pair<unsigned int,vector<unsigned int> >(_val,vector<unsigned int>()));}
+
 //	kernel& operator=(const kernel &rhs)	{
 //		
 //	}
