@@ -22,6 +22,7 @@ using namespace std;
 using namespace std::chrono;
 #include "load_spectra.hpp"
 #include "load_kernel.hpp"
+#include "create_results.hpp"
 
 // for convenience
 int main(int argc, char* argv[])	{
@@ -71,7 +72,7 @@ int main(int argc, char* argv[])	{
 
 	long parent_tolerance = 20;
 	sprintf(ptemp,"%li",parent_tolerance);
-	params["parent_tolerance"] = ptemp;
+	params["parent tolerance"] = ptemp;
 
 	cout << "\nstart ...\nidX parameters" << "\n";
 	if(maximum_spectra != -1)	{
@@ -81,7 +82,7 @@ int main(int argc, char* argv[])	{
 		cout << "\t   max spectra: unlimited" << "\n";
 	}
 	cout << "\t  fragment tol: " << fragment_tolerance << " mDa\n";
-	cout << "\t    parent tol: " << parent_tolerance << " ppm\n";
+	cout << "\t    parent tol: " << params["parent_tolerance"] << " ppm\n";
 	cout << "\t spectrum file: " << spectrum_file << "\n";
 	cout << "\t   kernel file: " << kernel_file << "\n";
 	cout << "\t   output file: " << output_file << "\n";
@@ -109,6 +110,16 @@ int main(int argc, char* argv[])	{
 	t2 = high_resolution_clock::now();
 	cout << "	   kernels = " << kindex.size() << "\n";
 	cout << "	kernels &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
+	t1 = high_resolution_clock::now();
+	cout << "perform ids"  << "\n";
+	create_results cr;
+	if(!cr.create(params,spectra,kindex,mindex))	{
+		cout << "Error (idx:0006): failed to create results " << "\n";
+		return 0;
+	}
+	t2 = high_resolution_clock::now();
+	cout << "	   results = " << cr.size() << "\n";
+	cout << "	results &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
 	return 0;
 }
 
