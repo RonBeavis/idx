@@ -33,17 +33,17 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 	if(istr.fail())	{
 		return false;
 	}
-	double ft = 1.0/atof(_params["fragment tolerance"].c_str());
-	double pt = 1.0/70.0;
-	double ppm = 2.0E-5;
+	string line;
+	using namespace rapidjson;
+	const double ft = 1.0/atof(_params["fragment tolerance"].c_str());
+	const double pt = 1.0/70.0;
+	const double ppm = 2.0E-5;
 	set<long> sp_set;
 	for(size_t a = 0; a < _spectra.size();a++)	{
 		sp_set.insert(_spectra[a].pm);
 	}
 	auto itsp = sp_set.end();
 	auto itppm = sp_set.end();
-	string line;
-	using namespace rapidjson;
 	long skipped = 0;
 	long hmatched = 0;
 	long pm = 0;
@@ -58,11 +58,11 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 	long lower = 0;
 	long delta = 0;
 	while(getline(istr,line))	{
-		if(lines != 0 && lines % 10000 == 0)	{
+		if(lines != 0 and lines % 10000 == 0)	{
 			cout << '.';
 			cout.flush();
 		}
-		if(lines != 0 && lines % 200000 == 0)	{
+		if(lines != 0 and lines % 200000 == 0)	{
 			cout << " " << lines << endl;
 			cout.flush();
 		}
@@ -112,7 +112,7 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 		for(size_t a = 0; a < jys.Size();a++)	{
 			val = (unsigned int)(0.5+jys[a].GetDouble()*ft);
 			if(_kernels.kindex[mv].find(val) == _kernels.kindex[mv].end())	{
-				_kernels.kindex[mv].insert(pair<unsigned int,vector<unsigned int> >(val,vector<unsigned int>()));
+				_kernels.add_pair(mv,val);
 			}
 			_kernels.kindex[mv][val].push_back(u);
 		}
