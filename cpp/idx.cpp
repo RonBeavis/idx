@@ -23,6 +23,7 @@ using namespace std::chrono;
 #include "load_spectra.hpp"
 #include "load_kernel.hpp"
 #include "create_results.hpp"
+#include "create_output.hpp"
 
 // for convenience
 int main(int argc, char* argv[])	{
@@ -88,6 +89,7 @@ int main(int argc, char* argv[])	{
 	cout << "\t   output file: " << output_file << "\n";
 	cout << "\t       version: " << version << "\n";
 	cout << "load & index spectra"  << "\n";
+	cout.flush();
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
 	vector<spectrum> spectra;
 	load_spectra ls;
@@ -98,8 +100,11 @@ int main(int argc, char* argv[])	{
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	cout << "	   spectra = " << spectra.size() << "\n";
 	cout << "	spectra &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
+	sprintf(ptemp,"%li",spectra.size());
+	params["spectra"] = ptemp;
 	t1 = high_resolution_clock::now();
 	cout << "load & index kernel"  << "\n";
+	cout.flush();
 	kernels kindex;
 	map<long,long> mindex;
 	load_kernel lk;
@@ -112,6 +117,7 @@ int main(int argc, char* argv[])	{
 	cout << "	kernels &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
 	t1 = high_resolution_clock::now();
 	cout << "perform ids"  << "\n";
+	cout.flush();
 	create_results cr;
 	if(!cr.create(params,spectra,kindex,mindex))	{
 		cout << "Error (idx:0006): failed to create results " << "\n";
@@ -120,6 +126,15 @@ int main(int argc, char* argv[])	{
 	t2 = high_resolution_clock::now();
 	cout << "	   results = " << cr.size() << "\n";
 	cout << "	results &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
+	cout << "create report"  << "\n";
+	cout.flush();
+	create_output co;
+	if(!co.create(params,cr))	{
+		cout << "Error (idx:0007): failed to create output " << "\n";
+		return 0;
+	}
+	t2 = high_resolution_clock::now();
+	cout << "... done\n";
 	return 0;
 }
 

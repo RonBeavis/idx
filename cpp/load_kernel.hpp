@@ -20,7 +20,7 @@ public:
 						unordered_map<unsigned int,vector<unsigned int> > >(_m,
 						unordered_map<unsigned int,vector<unsigned int> >()));}
 	bool add_pair(long _mv,long _val) { kindex[_mv].insert(pair<unsigned int,vector<unsigned int> >(_val,vector<unsigned int>()));}
-
+	bool clear(void) { kindex.clear();}
 //	kernel& operator=(const kernel &rhs)	{
 //		
 //	}

@@ -67,8 +67,8 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 			cout.flush();
 		}
 		lines++;
-		Document js;
-    		js.Parse(line.c_str(),line.length());
+ 		Document js;
+   		js.Parse(line.c_str(),line.length());
 		if(!js.HasMember("pm"))	{
 			continue;
 		}
