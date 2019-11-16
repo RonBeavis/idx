@@ -24,23 +24,45 @@ using namespace std;
 #include "load_kernel.hpp"
 #include "create_results.hpp"
 #include "create_output.hpp"
+#include <boost/math/distributions/hypergeometric.hpp>
+#include <boost/math/policies/policy.hpp>
 
 create_output::create_output(void)	{
 	low = -20;
 	high = 20;
+	load_distribution();
 }
 
 create_output::~create_output(void)	{
 }
 
+long create_output::get_cells(double _pm,long _res)	{
+	long pm = 100*(long)(_pm/100000);
+	long r = 2;
+	if(_res == 50)	{
+		r = 1;
+	}
+	else if(_res == 20)	{
+		r = 0;
+	}
+	if(pm < 800)	{
+		return (long)(pm*distribution[800][r]);
+	}
+	if(pm > 4000)	{
+		return (long)(pm*distribution[4000][r]);
+	}
+	return (long)(pm*distribution[pm][r]);
+}
+
 bool create_output::apply_model(long _res,string& _seq,double _pm,long _ions,long _lspectrum,double& pscore,double& p){
+	p = 0.0001;
+	pscore = 400;
 	long sfactor = 20;
 	long sadjust = 3;
 	if(_res > 100)	{
 		sfactor = 40;
 	}
-
-//	long cells = get_cells(_pm,_res);
+	long cells = get_cells(_pm,_res);
 	long total_ions = 2*(_seq.size() - 1);
 	if(total_ions > sfactor)	{
 		total_ions = sfactor;
@@ -52,11 +74,9 @@ bool create_output::apply_model(long _res,string& _seq,double _pm,long _ions,lon
 	if(_ions >= sc)	{
 		sc = _ions + 2;
 	}
-	p = 0.0001;
-	pscore = 400.0;
-//	hyper = hypergeom(cells,total_ions,sc)
-//	p = hyper.pmf(_ions)
-//	pscore = -100.0*math.log(p)/2.3
+	boost::math::hypergeometric_distribution<double> hyper(sc,total_ions,cells);
+	p = boost::math::pdf<double>(hyper, _ions);
+	pscore = -100.0*log(p)/2.3;
 	return true;
 }
 
@@ -206,12 +226,12 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 			}
 			seq = js["seq"].GetString();
 			apply_model(res,seq,pm,sv[s].peaks,sv[s].ions,score,prob);
-//			if(score < score_min or sv[s].ri < 0.20 or sv[s].peaks < min_c)	{
-//				continue;
-//			}
-//			if(prob > max_prob)	{
-//				max_prob = prob;
-//			}
+			if(score < score_min or sv[s].ri < 0.20 or sv[s].peaks < min_c)	{
+				continue;
+			}
+			if(prob > max_prob)	{
+				max_prob = prob;
+			}
 			ostringstream oline;
 			oline << sv[s].sc << "\t" << fixed << setprecision(3) << pm/1000.0 << "\t";
 			oline << delta << "\t" << setprecision(1) << ppm << setprecision(3) << "\t";
@@ -269,10 +289,13 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 	string header = "Id\tSub\tScan\tPeptide mass\tDelta\tppm\tz\tProtein acc\t";
 	header += "Start\tEnd\tPre\tSequence\tPost\tIC\tRI\tlog(f)\tlog(p)\tModifications";
 	ofs << header << endl;
-
+	long ids = 0;
 	for(size_t s = 0; s < odict.size(); s++)	{
 		for(size_t l = 0; l < odict[s].size(); l++)	{
-			ofs << s+1 << "\t" << l+1 << "\t" << odict[s][l] << endl;
+			ofs << ids+1 << "\t" << l+1 << "\t" << odict[s][l] << endl;
+		}
+		if(!odict[s].empty())	{
+			ids++;
 		}
 	}
 	ofs.close();
