@@ -16,13 +16,20 @@ public:
 	long r;
 	double pdf(long k)	{
 		double top = st(n)+st(r)+st(N-n)+st(N-r);
-		double bottom = st(N)+st(k)+st(n-k)+st(N-n-r+k);
+		double bottom = st(N)+st(k)+st(n-k)+st(r-k)+st(N-n-r+k);
 		double lp = top - bottom;
 		return exp(lp);
 	}
 	double st(long _n)	{
-		double pi = 3.1416;
+		if(_n < 50)	{
+			double f = 1.0;
+			for(long i = 1; i <= _n; i++)    {
+        			f *= (double)i;
+   			 }
+			return log(f);
+		}
 		double n = (double)_n;
+		double pi = 3.1416;
 		return (n*log(n) - n + log(sqrt(2*pi*n)));
 	}
 };
@@ -34,11 +41,12 @@ public:
 	virtual ~mod(void)	{}
 	long pos;
 	string res;
-	double mass;
+	long mass;
 	mod& operator=(const mod &rhs)	{
 		pos = rhs.pos;
 		res = rhs.res;
 		mass = rhs.mass;
+		return *this;
 	}
 	bool operator<( const mod& rhs ) const { 
 		return pos < rhs.pos; 
@@ -66,6 +74,12 @@ private:
 	map<long,long> ppms;
 	const long c13 = 1003;
 	map<long,vector<double> > distribution;
+	long get_ppm(string& t)	{
+		size_t s = t.find("\t");
+		s = t.find("\t",s+1);
+		s = t.find("\t",s+1);
+		return atol((t.substr(s+1,t.size()-1)).c_str());
+	}
 	bool load_distribution(void)	{
 		distribution.clear();
 		vector<double> v = {1.3,1.0,0.6};
@@ -134,6 +148,7 @@ private:
 		distribution[3900] = v;
 		v = {3.7,3.0,1.3};
 		distribution[4000] = v;
+		return true;
 	}
 };
 

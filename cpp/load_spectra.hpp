@@ -42,6 +42,8 @@ public:
 		double i_max = 0.0;
 		long m = 0;
 		long i = 0;
+		sort(mis.begin(), mis.end(), 
+               		[](const auto& x, const auto& y) { return x.first < y.first; } );
 		for(size_t a = 0; a < mis.size(); a++)	{
 			m = mis[a].first;
 			i = mis[a].second;		
@@ -61,7 +63,7 @@ public:
 				continue;
 			}
 			if((float)(mis[a].second)/i_max > 1.00)	{
-				i = (long)(mis[a].second/i_max);
+				i = (long)(mis[a].second);
 				if(!sMs.empty())	{
 					if((long)fabs(sMs.back() - m) < 500)	{
 						if(sIs.back() < i)	{
@@ -91,8 +93,7 @@ public:
 		}
 
 		sort(pMs.begin(), pMs.end(), 
-               		[](const auto& x, const auto& y) { return x.second < y.second; } );
-
+               		[](const auto& x, const auto& y) { return x.second > y.second; } );
 		long max_l = 2 * (long)((0.5 + (float)pm)/100000.0);
 		if(max_l > _l)	{
 			max_l = _l;

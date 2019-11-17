@@ -6,7 +6,7 @@
 # Identifies kernels corresponding to spectra
 #
 */
-// #include "pch.h"
+#include "pch.h"
 #include <iostream>
 #include <cstdio>
 #include <sys/stat.h>
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])	{
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	cout << "	   spectra = " << spectra.size() << "\n";
 	cout << "	spectra &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
-	sprintf(ptemp,"%li",spectra.size());
+	sprintf(ptemp,"%li",(long)spectra.size());
 	params["spectra"] = ptemp;
 	t1 = high_resolution_clock::now();
 	cout << "load & index kernel"  << "\n";

@@ -32,6 +32,7 @@ public:
 		for(size_t k = 0; k < rhs.ks.size(); k++)	{
 			ks.push_back(rhs.ks[k]);
 		}
+		return *this;
 	}
 };
 

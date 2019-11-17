@@ -6,6 +6,7 @@
 # Loads a spectrum file into a vector of spectrum objects
 #
 */
+#include "pch.h"
 
 #include "rapidjson/document.h"
 #include <fstream>
@@ -24,8 +25,8 @@ using namespace std;
 #include "load_kernel.hpp"
 #include "create_results.hpp"
 #include "create_output.hpp"
-#include <boost/math/distributions/hypergeometric.hpp>
-#include <boost/math/policies/policy.hpp>
+//#include <boost/math/distributions/hypergeometric.hpp>
+//#include <boost/math/policies/policy.hpp>
 
 create_output::create_output(void)	{
 	low = -20;
@@ -63,7 +64,7 @@ bool create_output::apply_model(long _res,string& _seq,double _pm,long _ions,lon
 		sfactor = 40;
 	}
 	long cells = get_cells(_pm,_res);
-	long total_ions = 2*(_seq.size() - 1);
+	long total_ions = 2*(long)(_seq.size() - 1);
 	if(total_ions > sfactor)	{
 		total_ions = sfactor;
 	}
@@ -74,8 +75,10 @@ bool create_output::apply_model(long _res,string& _seq,double _pm,long _ions,lon
 	if(_ions >= sc)	{
 		sc = _ions + 2;
 	}
-	boost::math::hypergeometric_distribution<double> hyper(sc,total_ions,cells);
-	p = boost::math::pdf<double>(hyper, _ions);
+//	boost::math::hypergeometric_distribution<double> hyper(sc,total_ions,cells);
+//	p = boost::math::pdf<double>(hyper, _ions);
+	hypergeom hp(sc,total_ions,cells);
+	p = hp.pdf(_ions);
 	pscore = -100.0*log(p)/2.3;
 	return true;
 }
@@ -114,6 +117,7 @@ bool create_output::find_window(void)	{
 			max = vs[i];
 			center = i;
 		}
+		it++;
 	}
 	double ic = (double)max;
 	if(ic < 100.0)	{
@@ -181,7 +185,7 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 	using namespace rapidjson;
 	long c = 0;
 	long h = 0;
-	
+	long s_count = 0;
 	while(getline(istr,line))	{
 		if(c != 0 and c % 10000 == 0)	{
 			cout << '.';
@@ -244,11 +248,12 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 			for(SizeType a = 0; a < jbs.Size();a++)	{
 				lns += jbs[a].GetInt();
 			}
+			oline << fixed << setprecision(2);
 			if(lns > 0)	{
-				oline << sv[s].ri << "\t" << log(lns)/2.3 << "\t" << -0.01*score << "\t";
+				oline << sv[s].ri << "\t" << setprecision(1) << log(lns)/2.3 << "\t" << -0.01*score << "\t";
 			}
 			else	{
-				oline << sv[s].ri << "\t" << "-" << "\t" << -0.01*score << "\t";
+				oline << sv[s].ri << "\t" << setprecision(1) << "-" << "\t" << -0.01*score << "\t";
 			}
 			if(js.HasMember("mods"))	{
 				const Value& jmods = js["mods"];
@@ -258,7 +263,7 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 					const Value& lmods = jmods[a];
 					tmod.pos = lmods[1].GetInt();
 					tmod.res = lmods[0].GetString();
-					tmod.mass = lmods[2].GetFloat();
+					tmod.mass = lmods[2].GetInt();
 					mods.push_back(tmod);
 				}
 				sort(mods.begin(),mods.end());
@@ -273,15 +278,16 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 			}
 			last_i = s+1;
 			if(odict.find(s) != odict.end())	{
-				odict[s].push_back(oline.str());
+				odict[s].push_back(oline.str());			
 			}
 			else	{
 				odict.insert(pair<long,vector<string> >(s,vector<string>()));
 				odict[s].push_back(oline.str());
 			}
-			ppms[s] = ppm;
+			ppms[s] = (long)(0.5+ppm);
 		}
 		total_prob += max_prob;
+		s_count++;
 
 	}
 	ofstream ofs;
@@ -289,15 +295,50 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 	string header = "Id\tSub\tScan\tPeptide mass\tDelta\tppm\tz\tProtein acc\t";
 	header += "Start\tEnd\tPre\tSequence\tPost\tIC\tRI\tlog(f)\tlog(p)\tModifications";
 	ofs << header << endl;
-	long ids = 0;
-	for(size_t s = 0; s < odict.size(); s++)	{
-		for(size_t l = 0; l < odict[s].size(); l++)	{
+	find_window();
+/*	long ids = 0;
+	for(long s = 0; s < odict.size(); s++)	{
+		for(long l = 0; l < odict[s].size(); l++)	{
 			ofs << ids+1 << "\t" << l+1 << "\t" << odict[s][l] << endl;
 		}
 		if(!odict[s].empty())	{
 			ids++;
 		}
+	}	*/
+
+	long err = 0;
+	long sub = 0;
+	long tot = 0;
+	string t;
+	for(size_t a = 0; a < odict.size(); a++)	{
+		sub = 1;
+		for(size_t b = 0; b < odict[a].size(); b++)	{
+			t = odict[a][b];
+			long ps = get_ppm(t);
+			if(ps <= high and ps >= low)	{
+				ofs << a << "\t" << sub << "\t" << t << endl;
+				sub++;
+				tot++;
+			}
+			else	{
+				err++;
+			}
+		}
 	}
+	cout << "\n     lines = " << tot << endl;
+	if(total_prob > 0)	{
+		cout << "     fpr = " << scientific << setprecision(1) << total_prob << endl;
+	}
+	if(low != -20 and high != 20)	{
+		double ble = 100.0*((high-low)/41.0)*(double)err/(double)tot;
+		cout << "     baseline error = " << fixed << setprecision(1) << ble << "%" << endl;
+	}
+	else	{
+		cout << "     baseline error = n/a" << endl;
+	}
+	cout << "     parent ion tolerance = " << low << "," << high << endl;
+
+
 	ofs.close();
 	cout << endl;
 	cout.flush();

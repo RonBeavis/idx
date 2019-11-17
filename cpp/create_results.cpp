@@ -6,6 +6,7 @@
 # Loads a spectrum file into a vector of spectrum objects
 #
 */
+#include "pch.h"
 
 #include <fstream>
 #include <cstdio>
@@ -34,6 +35,7 @@ bool create_results::create(map<string,string>& _p,
 	long z = 1;
 	double pt = 1.0/70.0;
 	double ppm = atof(_p["parent tolerance"].c_str())/1.0e06;
+	double ft = atof(_p["fragment tolerance"].c_str())/1000.0;
 	vector<long> dvals{-1,0,1};
 	long d = 0;
 	long count = 0;
@@ -69,7 +71,6 @@ bool create_results::create(map<string,string>& _p,
 		rm = (double)_s[s].pm;
 		pm = (long)(0.5+rm*pt);
 		pz = (long)_s[s].pz;
-
 		idx.clear();
 		idi = 0;
 		use2 = (pm > 1500000 and pz == 2);
@@ -187,7 +188,7 @@ bool create_results::create(map<string,string>& _p,
 			r.pm = _s[s].pm;
 			r.pz = _s[s].pz;
 			r.sc = _s[s].sc;
-			r.ions = _s[s].mis.size()/3;
+			r.ions = (long)_s[s].mis.size()/3;
 			ids.push_back(r);
 		}
 		z += 1;

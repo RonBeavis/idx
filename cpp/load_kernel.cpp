@@ -6,6 +6,7 @@
 # Loads a spectrum file into a vector of spectrum objects
 #
 */
+#include "pch.h"
 
 #include "rapidjson/document.h"
 #include <fstream>
@@ -109,7 +110,7 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 			_kernels.kindex[mv][val].push_back(u);
 		}
 		const Value& jys = js["ys"];
-		for(size_t a = 0; a < jys.Size();a++)	{
+		for(SizeType a = 0; a < jys.Size();a++)	{
 			val = (unsigned int)(0.5+jys[a].GetDouble()*ft);
 			if(_kernels.kindex[mv].find(val) == _kernels.kindex[mv].end())	{
 				_kernels.add_pair(mv,val);

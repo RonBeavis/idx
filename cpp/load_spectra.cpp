@@ -6,6 +6,7 @@
 # Loads a spectrum file into a vector of spectrum objects
 #
 */
+#include "pch.h"
 
 #include <fstream>
 #include <cstdio>
