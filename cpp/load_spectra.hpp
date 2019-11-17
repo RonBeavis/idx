@@ -36,6 +36,7 @@ public:
 			p.second = rhs.mis[i].second;
 			mis.push_back(p);
 		}
+		return *this;
 	}
 	bool condition(long _ires, long _l)	{
 		long a = 0;

@@ -29,8 +29,8 @@ using namespace std;
 //#include <boost/math/policies/policy.hpp>
 
 create_output::create_output(void)	{
-	low = -20;
-	high = 20;
+	low = -20.0;
+	high = 20.0;
 	load_distribution();
 }
 
@@ -121,24 +121,26 @@ bool create_output::find_window(void)	{
 	}
 	double ic = (double)max;
 	if(ic < 100.0)	{
-		low = -20;
-		high = 20;
+		low = -20.0;
+		high = 20.0;
 		return true;
 	}
-	low = -20;
+	long l = -20;
 	for(i = -20;i < center; i++)	{
 		if(vs[i]/ic >= 0.01)	{
-			low = i;
+			l = i;
 			break;
 		}
 	}
-	high = 20;
+	long h = 20;
 	for(i = 20; i > center; i--)	{
 		if(vs[i]/ic >= 0.01)	{
-			high = i;
+			h = i;
 			break;
 		}
 	}
+	low = (double)l;
+	high = (double)h;
 	return true;
 }
 
@@ -310,11 +312,11 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 	long sub = 0;
 	long tot = 0;
 	string t;
-	for(size_t a = 0; a < odict.size(); a++)	{
+	for(long a = 0; a < (long)odict.size(); a++)	{
 		sub = 1;
 		for(size_t b = 0; b < odict[a].size(); b++)	{
 			t = odict[a][b];
-			long ps = get_ppm(t);
+			double ps = get_ppm(t);
 			if(ps <= high and ps >= low)	{
 				ofs << a << "\t" << sub << "\t" << t << endl;
 				sub++;

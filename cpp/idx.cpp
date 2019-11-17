@@ -97,6 +97,9 @@ int main(int argc, char* argv[])	{
 		cout << "Error (idx:0003): failed to load spectrum file \"" << spectrum_file << "\"\n";
 		return 0;
 	}
+	if(maximum_spectra != -1 and spectra.size() > maximum_spectra)	{
+		spectra.erase(spectra.begin()+maximum_spectra,spectra.end());
+	} 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	cout << "	   spectra = " << spectra.size() << "\n";
 	cout << "	spectra &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";

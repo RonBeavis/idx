@@ -65,8 +65,8 @@ private:
 	bool find_window(void);
 	long get_cells(double _pm,long _res);
 	bool apply_model(long _r,string& _s,double _pm,long _ions,long _lspectrum,double& pscore,double& p);
-	long low;
-	long high;
+	double low;
+	double high;
 	map<long,id> sv;
 	map<long,set<long> > sdict;
 	map<long,string> mt;
@@ -74,11 +74,11 @@ private:
 	map<long,long> ppms;
 	const long c13 = 1003;
 	map<long,vector<double> > distribution;
-	long get_ppm(string& t)	{
+	double get_ppm(string& t)	{
 		size_t s = t.find("\t");
 		s = t.find("\t",s+1);
 		s = t.find("\t",s+1);
-		return atol((t.substr(s+1,t.size()-1)).c_str());
+		return atof((t.substr(s+1,t.size()-1)).c_str());
 	}
 	bool load_distribution(void)	{
 		distribution.clear();
