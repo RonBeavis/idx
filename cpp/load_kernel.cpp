@@ -22,6 +22,7 @@
 using namespace std;
 #include "load_spectra.hpp"
 #include "load_kernel.hpp"
+#include "json_loader.hpp"
 
 load_kernel::load_kernel(void)	{
 }
@@ -63,7 +64,7 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 	kPair pr;
 	auto itsend = spairs.end();
 
-	static const size_t val_buf_sz{ 32768 };
+/*	static const size_t val_buf_sz{ 32768 };
 	char val_buf[val_buf_sz];
 	rapidjson::MemoryPoolAllocator<> val_alloc{ &val_buf[0], sizeof(val_buf) };
 
@@ -75,7 +76,7 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 		rapidjson::UTF8<>,
 		rapidjson::MemoryPoolAllocator<>,
 		rapidjson::MemoryPoolAllocator<> > js{ &val_alloc, sizeof(p_buf), &parse_alloc };
-
+	json_loader jload;	*/
 	while(getline(istr,line))	{
 		if(lines != 0 and lines % 10000 == 0)	{
 			cout << '.';
@@ -86,8 +87,13 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 			cout.flush();
 		}
 		lines++;
- 		Document js;
+		Document js;
    		js.Parse(line.c_str(),line.length());
+//		js.SetNull();
+//		val_alloc.Clear();
+//		parse_alloc.Clear();
+//		jload.load(line);
+//		continue;
 		if(!js.HasMember("pm"))	{
 			continue;
 		}
@@ -144,9 +150,9 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 			_kernels.mvindex.insert((unsigned int)mv);
 			_kernels.kindex[pr].push_back(u);
 		}
-		js.SetNull();
-		val_alloc.Clear();
-		parse_alloc.Clear();
+//		js.SetNull();
+//		val_alloc.Clear();
+//		parse_alloc.Clear();
 	}
 	cout << "\n";
 //	cout << "skipped: " << skipped << ", hmatches: " << hmatched << ", found: " << found << ", lines: " << lines << endl;
