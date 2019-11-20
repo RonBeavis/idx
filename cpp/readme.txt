@@ -1,4 +1,5 @@
 A C++ port of the Cython version of idX.
+
 The purpose of this port was to experiment with ways of reducing the memory used during the identification process, using C++ containiners. RapidJSON was selected to provide access to the kernel JSON Lines files. parallel_hashmap was selected to provide cross-platform-equivalent performance for large containers.
 
 Requires the RapidJSON header files in a folder called rapidjson.
