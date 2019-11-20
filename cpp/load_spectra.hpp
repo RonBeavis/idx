@@ -10,24 +10,29 @@
 #include <algorithm>
 #include <cmath>
 
+typedef std::pair <unsigned int,unsigned int> sPair;
+
 class spectrum
 {
 public:
-	spectrum(void)	{pm = 0;pi=0;pz=0;sc=0;}
+	spectrum(void)	{pm = 0;pi=0;pz=0;sc=0;pt=0.0;}
 	virtual ~spectrum(void)	{ clear(); }
 	long pm;
 	long pi;
 	long pz;
 	long sc;
 	long isum;
+	double pt;
 	vector<pair<long,long>> mis;
+	phmap::flat_hash_set<sPair> spairs;
 	string desc;
-	bool clear()	{sc = 0;pm = 0; pi = 0; pz = 0; sc=0; desc = ""; mis.clear();return true;}
+	bool clear()	{sc = 0;pm = 0; pi = 0; pz = 0; sc=0; desc = ""; mis.clear();spairs.clear();return true;}
 	spectrum& operator=(const spectrum &rhs)	{
 		mis.clear();
 		pm = rhs.pm;
 		pi = rhs.pi;
 		pz = rhs.pz;
+		pt = rhs.pt;
 		desc = rhs.desc;
 		sc = rhs.sc;
 		pair<long,long> p;
@@ -36,11 +41,13 @@ public:
 			p.second = rhs.mis[i].second;
 			mis.push_back(p);
 		}
+		spairs.clear();
+		spairs.insert(rhs.spairs.begin(),rhs.spairs.end());
 		return *this;
 	}
 	bool condition(long _ires, long _l)	{
-		long a = 0;
 		double i_max = 0.0;
+		double res = 1.0/(double)_ires;
 		long m = 0;
 		long i = 0;
 		sort(mis.begin(), mis.end(), 
@@ -110,14 +117,23 @@ public:
 //
 		long is = 0;
 		mis.clear();
+		sPair pr;
+		double ptd = 1.0/70.0;
+		pr.first = (unsigned int)(0.5+pm*ptd);
 		for(size_t a=0; a < pMs.size();a++)	{
 			m = pMs[a].first;
-			p.first = (long)((0.5+(double)m)/_ires);
+			p.first = (long)(0.5+(double)m*res);
+			pr.second = p.first;
+			spairs.insert(pr);
 			p.second = pMs[a].second;
 			mis.push_back(p);
 			p.first -= 1;
+			pr.second = p.first;
+			spairs.insert(pr);
 			mis.push_back(p);
 			p.first += 2;
+			pr.second = p.first;
+			spairs.insert(pr);
 			mis.push_back(p);
 			is += 3*p.second;
 		}

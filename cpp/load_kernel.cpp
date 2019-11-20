@@ -18,6 +18,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include "parallel_hashmap/phmap.h"
 using namespace std;
 #include "load_spectra.hpp"
 #include "load_kernel.hpp"
@@ -40,8 +41,10 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 	const double pt = 1.0/70.0;
 	const double ppm = 2.0E-5;
 	set<long> sp_set;
+	phmap::flat_hash_set<sPair> spairs;
 	for(size_t a = 0; a < _spectra.size();a++)	{
 		sp_set.insert(_spectra[a].pm);
+		spairs.insert(_spectra[a].spairs.begin(),_spectra[a].spairs.end());
 	}
 	auto itsp = sp_set.end();
 	auto itppm = sp_set.end();
@@ -53,11 +56,26 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 	long u = 0;
 	const long c13 = 1003;
 	unsigned int val = 0;
-	long found = 0;
 	long lines = 0;
 	bool skip = true;
 	long lower = 0;
 	long delta = 0;
+	kPair pr;
+	auto itsend = spairs.end();
+
+	static const size_t val_buf_sz{ 32768 };
+	char val_buf[val_buf_sz];
+	rapidjson::MemoryPoolAllocator<> val_alloc{ &val_buf[0], sizeof(val_buf) };
+
+	static const size_t parse_buf_sz{ 32768 };
+	char p_buf[parse_buf_sz];
+	rapidjson::MemoryPoolAllocator<> parse_alloc{ &p_buf[0], sizeof(p_buf) };
+
+	rapidjson::GenericDocument<
+		rapidjson::UTF8<>,
+		rapidjson::MemoryPoolAllocator<>,
+		rapidjson::MemoryPoolAllocator<> > js{ &val_alloc, sizeof(p_buf), &parse_alloc };
+
 	while(getline(istr,line))	{
 		if(lines != 0 and lines % 10000 == 0)	{
 			cout << '.';
@@ -98,25 +116,37 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 		}
 		u = (unsigned int)js["u"].GetInt();
 		_mindex[u] = pm;
-		if(_kernels.kindex.find(mv) == _kernels.kindex.end())	{
-			_kernels.add_map(mv);
-		}
 		const Value& jbs = js["bs"];
+		size_t vpos = 0;
+		pr.first = (unsigned int)mv;
 		for(SizeType a = 0; a < jbs.Size();a++)	{
 			val = (unsigned int)(0.5+jbs[a].GetDouble()*ft);
-			if(_kernels.kindex[mv].find(val) == _kernels.kindex[mv].end())	{
-				_kernels.add_pair(mv,val);
+			pr.second = val;
+			if(spairs.find(pr) == spairs.end())	{
+				continue;
 			}
-			_kernels.kindex[mv][val].push_back(u);
+			if(_kernels.kindex.find(pr) == _kernels.kindex.end())	{
+				_kernels.add_pair(pr);
+			}
+			_kernels.mvindex.insert((unsigned int)mv);
+			_kernels.kindex[pr].push_back(u);
 		}
 		const Value& jys = js["ys"];
 		for(SizeType a = 0; a < jys.Size();a++)	{
 			val = (unsigned int)(0.5+jys[a].GetDouble()*ft);
-			if(_kernels.kindex[mv].find(val) == _kernels.kindex[mv].end())	{
-				_kernels.add_pair(mv,val);
+			pr.second = val;
+			if(spairs.find(pr) == spairs.end())	{
+				continue;
 			}
-			_kernels.kindex[mv][val].push_back(u);
+			if(_kernels.kindex.find(pr) == _kernels.kindex.end())	{
+				_kernels.add_pair(pr);
+			}
+			_kernels.mvindex.insert((unsigned int)mv);
+			_kernels.kindex[pr].push_back(u);
 		}
+		js.SetNull();
+		val_alloc.Clear();
+		parse_alloc.Clear();
 	}
 	cout << "\n";
 //	cout << "skipped: " << skipped << ", hmatches: " << hmatched << ", found: " << found << ", lines: " << lines << endl;

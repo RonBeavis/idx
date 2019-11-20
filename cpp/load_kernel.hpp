@@ -8,25 +8,18 @@
 */
 
 #include <algorithm>
+typedef std::pair <unsigned int,unsigned int> kPair;
 
 class kernels
 {
 public:
 	kernels(void)	{}
 	virtual ~kernels(void)	{}
-	unordered_map<unsigned int,unordered_map<unsigned int,vector<unsigned int> > > kindex;
+	phmap::flat_hash_map<kPair,vector<unsigned int> > kindex;
+	phmap::flat_hash_set<unsigned int> mvindex;
+	void add_pair(kPair _v) {kindex[_v] = vector<unsigned int>();}
 	long size(void)	{ return (long)kindex.size();}
-	bool add_map(long _m)	{ 
-							kindex.insert(pair<unsigned int,
-											unordered_map<unsigned int,vector<unsigned int> > >(_m,
-											unordered_map<unsigned int, vector<unsigned int> >())); 
-							return true;
-	}
-	bool add_pair(long _mv, long _val) { kindex[_mv].insert(pair<unsigned int, vector<unsigned int> >(_val, vector<unsigned int>())); return true; }
-	bool clear(void) { kindex.clear();}
-//	kernel& operator=(const kernel &rhs)	{
-//		
-//	}
+	void clear(void) { kindex.clear();}
 };
 
 class load_kernel

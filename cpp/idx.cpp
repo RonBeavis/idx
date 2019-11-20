@@ -8,8 +8,8 @@
 */
 #include "pch.h"
 #include <iostream>
+#include <fstream>
 #include <cstdio>
-#include <sys/stat.h>
 #include <string>
 #include <cstring>
 #include <map>
@@ -18,12 +18,18 @@
 #include <vector>
 #include <ctime>
 #include <chrono>
+#include "parallel_hashmap/phmap.h"
 using namespace std;
 using namespace std::chrono;
 #include "load_spectra.hpp"
 #include "load_kernel.hpp"
 #include "create_results.hpp"
 #include "create_output.hpp"
+
+inline bool exists (const std::string& name) {
+    ifstream f(name.c_str());
+    return f.good();
+}
 
 // for convenience
 int main(int argc, char* argv[])	{
@@ -47,15 +53,14 @@ int main(int argc, char* argv[])	{
 	params["fragment tolerance"] = ptemp;
 
 	string spectrum_file = argv[1];
-	struct stat fbuffer;
-    	if(stat(spectrum_file.c_str(), &fbuffer) != 0)	{
+    	if(!exists(spectrum_file))	{
 		cout << "Error (idx:0001): spectrum file \"" << spectrum_file << "\" does not exist\n";
 		return 0;
 	}
 	params["spectrum file"] = spectrum_file;
 
 	string kernel_file = argv[2];
-    	if(stat(kernel_file.c_str(), &fbuffer) != 0)	{
+    	if(!exists(kernel_file))	{
 		cout << "Error (idx:0002): kernel file \"" << kernel_file << "\" does not exist\n";
 		return 0;
 	}

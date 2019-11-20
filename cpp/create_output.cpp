@@ -20,13 +20,12 @@
 #include <string>
 #include <set>
 #include <vector>
+#include "parallel_hashmap/phmap.h"
 using namespace std;
 #include "load_spectra.hpp"
 #include "load_kernel.hpp"
 #include "create_results.hpp"
 #include "create_output.hpp"
-//#include <boost/math/distributions/hypergeometric.hpp>
-//#include <boost/math/policies/policy.hpp>
 
 create_output::create_output(void)	{
 	low = -20.0;
@@ -198,7 +197,7 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 			cout.flush();
 		}
 		c++;
- 		Document js;
+		Document js;
    		js.Parse(line.c_str(),line.length());
 		if(!js.HasMember("pm"))	{
 			continue;
@@ -290,7 +289,6 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 		}
 		total_prob += max_prob;
 		s_count++;
-
 	}
 	ofstream ofs;
 	ofs.open(_params["output file"]);
@@ -298,16 +296,6 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 	header += "Start\tEnd\tPre\tSequence\tPost\tIC\tRI\tlog(f)\tlog(p)\tModifications";
 	ofs << header << endl;
 	find_window();
-/*	long ids = 0;
-	for(long s = 0; s < odict.size(); s++)	{
-		for(long l = 0; l < odict[s].size(); l++)	{
-			ofs << ids+1 << "\t" << l+1 << "\t" << odict[s][l] << endl;
-		}
-		if(!odict[s].empty())	{
-			ids++;
-		}
-	}	*/
-
 	long err = 0;
 	long sub = 0;
 	long tot = 0;
@@ -338,7 +326,7 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 	else	{
 		cout << "     baseline error = n/a" << endl;
 	}
-	cout << "     parent ion tolerance = " << low << "," << high << endl;
+	cout << "     parent ion tolerance = " << fixed << setprecision(0) << low << "," << high << endl;
 
 
 	ofs.close();

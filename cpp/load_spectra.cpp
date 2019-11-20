@@ -16,6 +16,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include "parallel_hashmap/phmap.h"
 using namespace std;
 #include "load_spectra.hpp"
 
@@ -32,6 +33,7 @@ bool load_spectra::load(map<string,string>& _params,vector<spectrum>& _spectra)	
 	if(istr.fail())	{
 		return false;
 	}
+	double pt = atoi(_params["parent tolerance"].c_str());
 	size_t len = 1024;
 	size_t size = 0;
 	char *line = new char[len];
@@ -39,11 +41,8 @@ bool load_spectra::load(map<string,string>& _params,vector<spectrum>& _spectra)	
 	string desc = "";
 	char *pos = NULL;
 	size_t equals = 0;
-	bool first = true;
-	long id = 0;
 	double parent = 0.0;
 	double charge = 1.0;
-	double m = 0;
 	string run_time = "";
 	vector<double> masses;
 	vector<double> intensities;
@@ -102,6 +101,7 @@ bool load_spectra::load(map<string,string>& _params,vector<spectrum>& _spectra)	
 				sp.pm = (long)(0.5 + 1000*(parent*charge - proton*charge));
 				sp.pz = (long)charge;
 				sp.pi = 100;
+				sp.pt = pt;
 				sp.desc = desc;
 				if(scan == 0)	{
 					sp.sc = s;
@@ -139,7 +139,7 @@ bool load_spectra::load(map<string,string>& _params,vector<spectrum>& _spectra)	
 	}
 	cout << "\n";
 	cout.flush();
-	delete line;
+	delete[] line;
 	istr.close();
 	return true;
 }
