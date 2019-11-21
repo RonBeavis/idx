@@ -4,8 +4,10 @@ The purpose of this port was to experiment with ways of reducing the memory used
 
 Requires the RapidJSON header files in a folder called rapidjson:
 
+   https://github.com/Tencent/rapidjson/tree/master/include/rapidjson
+
 Requires the parallel_hashmap files in a folder called parallel_hashmap:
 
-https://github.com/greg7mdp/parallel-hashmap/tree/master/parallel_hashmap
+   https://github.com/greg7mdp/parallel-hashmap/tree/master/parallel_hashmap
 
 This port was written to be compliant with C++ 14 and it has been compiled using GCC version Ubuntu 7.4.0 and Visual Studio C++ 2019.
