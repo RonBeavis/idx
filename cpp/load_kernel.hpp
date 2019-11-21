@@ -8,16 +8,16 @@
 */
 
 #include <algorithm>
-typedef std::pair <unsigned int,unsigned int> kPair;
+typedef std::pair <long,long> kPair;
 
 class kernels
 {
 public:
 	kernels(void)	{}
 	virtual ~kernels(void)	{}
-	phmap::flat_hash_map<kPair,vector<unsigned int> > kindex;
-	phmap::flat_hash_set<unsigned int> mvindex;
-	void add_pair(kPair _v) {kindex[_v] = vector<unsigned int>();}
+	phmap::parallel_flat_hash_map<kPair,vector<long> > kindex;
+	phmap::parallel_flat_hash_set<long> mvindex;
+	void add_pair(kPair _v) {kindex[_v] = vector<long>();}
 	long size(void)	{ return (long)kindex.size();}
 	void clear(void) { kindex.clear();}
 };
@@ -27,7 +27,7 @@ class load_kernel
 public:
 	load_kernel(void);
 	virtual ~load_kernel(void);
-	bool load(map<string,string>& _p,vector<spectrum>& _s,kernels& _k,map<long,long>& _m);
+	bool load(map<string,string>& _p,load_spectra& _l,kernels& _k,map<long,long>& _m);
 };
 
 

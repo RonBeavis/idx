@@ -26,7 +26,7 @@ load_spectra::load_spectra(void)	{
 load_spectra::~load_spectra(void)	{
 }
 
-bool load_spectra::load(map<string,string>& _params,vector<spectrum>& _spectra)	{
+bool load_spectra::load(map<string,string>& _params)	{
 	ifstream istr;
 	istr.open(_params["spectrum file"]);
 	long res = (long)atoi(_params["fragment tolerance"].c_str());
@@ -118,7 +118,14 @@ bool load_spectra::load(map<string,string>& _params,vector<spectrum>& _spectra)	
 					i++;
 				}
 				sp.condition(res,50);
-				_spectra.push_back(sp);
+				spectra.push_back(sp);
+				if(false)	{
+					auto it = sp.mis.begin();
+					while(it != sp.mis.end())	{
+						cout << it->first << "\t" << it->second << endl;
+						it++;
+					}
+				}
 			}
 			desc = "";
 			masses.clear();

@@ -30,7 +30,7 @@ load_kernel::load_kernel(void)	{
 load_kernel::~load_kernel(void)	{
 }
 
-bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,kernels& _kernels,map<long,long>& _mindex)	{
+bool load_kernel::load(map<string,string>& _params,load_spectra& _l,kernels& _kernels,map<long,long>& _mindex)	{
 	ifstream istr;
 	istr.open(_params["kernel file"]);
 	if(istr.fail())	{
@@ -42,10 +42,10 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 	const double pt = 1.0/70.0;
 	const double ppm = 2.0E-5;
 	set<long> sp_set;
-	phmap::flat_hash_set<sPair> spairs;
-	for(size_t a = 0; a < _spectra.size();a++)	{
-		sp_set.insert(_spectra[a].pm);
-		spairs.insert(_spectra[a].spairs.begin(),_spectra[a].spairs.end());
+	phmap::parallel_flat_hash_set<sPair> spairs;
+	for(size_t a = 0; a < _l.spectra.size();a++)	{
+		sp_set.insert(_l.spectra[a].pm);
+		spairs.insert(_l.spectra[a].spairs.begin(),_l.spectra[a].spairs.end());
 	}
 	auto itsp = sp_set.end();
 	auto itppm = sp_set.end();
@@ -56,7 +56,7 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 	long cv = 0;
 	long u = 0;
 	const long c13 = 1003;
-	unsigned int val = 0;
+	long val = 0;
 	long lines = 0;
 	bool skip = true;
 	long lower = 0;
@@ -102,8 +102,8 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 			continue;
 		}
 		pm = (long)js["pm"].GetInt();
-		mv = (long)(0.5+pm*pt);
-		cv = (long)(0.5+(pm+c13)*pt);
+		mv = (long)(0.5+(double)pm*pt);
+		cv = (long)(0.5+(double)(pm+c13)*pt);
 		delta = (long)(0.5+(double)pm*ppm);
 		lower = pm-delta;
 		itppm = sp_set.lower_bound(lower);
@@ -120,13 +120,13 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 			skipped++;
 			continue;
 		}
-		u = (unsigned int)js["u"].GetInt();
+		u = (long)js["u"].GetInt();
 		_mindex[u] = pm;
 		const Value& jbs = js["bs"];
 		size_t vpos = 0;
-		pr.first = (unsigned int)mv;
+		pr.first = (long)mv;
 		for(SizeType a = 0; a < jbs.Size();a++)	{
-			val = (unsigned int)(0.5+jbs[a].GetDouble()*ft);
+			val = (long)(0.5+jbs[a].GetDouble()*ft);
 			pr.second = val;
 			if(spairs.find(pr) == spairs.end())	{
 				continue;
@@ -134,12 +134,12 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 			if(_kernels.kindex.find(pr) == _kernels.kindex.end())	{
 				_kernels.add_pair(pr);
 			}
-			_kernels.mvindex.insert((unsigned int)mv);
+			_kernels.mvindex.insert((long)mv);
 			_kernels.kindex[pr].push_back(u);
 		}
 		const Value& jys = js["ys"];
 		for(SizeType a = 0; a < jys.Size();a++)	{
-			val = (unsigned int)(0.5+jys[a].GetDouble()*ft);
+			val = (long)(0.5+jys[a].GetDouble()*ft);
 			pr.second = val;
 			if(spairs.find(pr) == spairs.end())	{
 				continue;
@@ -147,7 +147,7 @@ bool load_kernel::load(map<string,string>& _params,vector<spectrum>& _spectra,ke
 			if(_kernels.kindex.find(pr) == _kernels.kindex.end())	{
 				_kernels.add_pair(pr);
 			}
-			_kernels.mvindex.insert((unsigned int)mv);
+			_kernels.mvindex.insert((long)mv);
 			_kernels.kindex[pr].push_back(u);
 		}
 //		js.SetNull();

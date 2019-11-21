@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <cmath>
 
-typedef std::pair <unsigned int,unsigned int> sPair;
+typedef std::pair <long,long> sPair;
 
 class spectrum
 {
@@ -24,7 +24,7 @@ public:
 	long isum;
 	double pt;
 	vector<pair<long,long>> mis;
-	phmap::flat_hash_set<sPair> spairs;
+	phmap::parallel_flat_hash_set<sPair> spairs;
 	string desc;
 	bool clear()	{sc = 0;pm = 0; pi = 0; pz = 0; sc=0; desc = ""; mis.clear();spairs.clear();return true;}
 	spectrum& operator=(const spectrum &rhs)	{
@@ -47,7 +47,7 @@ public:
 	}
 	bool condition(long _ires, long _l)	{
 		double i_max = 0.0;
-		double res = 1.0/(double)_ires;
+		const double res = 1.0/(double)_ires;
 		long m = 0;
 		long i = 0;
 		sort(mis.begin(), mis.end(), 
@@ -67,13 +67,13 @@ public:
 		i_max = i_max/100.0;
 		for(size_t a = 0; a < mis.size(); a++)	{
 			m = mis[a].first;
-			if(m < 150000 or (long)fabs(pm-m) < 45000 or (long)fabs(pm/pz-m) < 2000)	{
+			if(m < 150000 or fabs(pm-m) < 45000.0 or fabs(pm/pz-m) < 2000.0)	{
 				continue;
 			}
-			if((float)(mis[a].second)/i_max > 1.00)	{
-				i = (long)(mis[a].second);
+			if((double)mis[a].second/i_max >= 1.00)	{
+				i = mis[a].second;
 				if(!sMs.empty())	{
-					if((long)fabs(sMs.back() - m) < 500)	{
+					if(fabs(sMs.back() - m) < 500.0)	{
 						if(sIs.back() < i)	{
 							sMs.pop_back();
 							sIs.pop_back();
@@ -99,10 +99,9 @@ public:
 			p.second = sIs[a];
 			pMs.push_back(p);
 		}
-
 		sort(pMs.begin(), pMs.end(), 
-               		[](const auto& x, const auto& y) { return x.second > y.second; } );
-		long max_l = 2 * (long)((0.5 + (float)pm)/100000.0);
+               		[](const auto& x, const auto& y) { if(x.second > y.second) return true; if(x.second == y.second) return x.first < y.first; return false;} );
+		long max_l = 2 * (long)((0.5 + (double)pm)/100000.0);
 		if(max_l > _l)	{
 			max_l = _l;
 		}
@@ -118,8 +117,8 @@ public:
 		long is = 0;
 		mis.clear();
 		sPair pr;
-		double ptd = 1.0/70.0;
-		pr.first = (unsigned int)(0.5+pm*ptd);
+		const double ptd = 1.0/70.0;
+		pr.first = (long)(0.5+(double)pm*ptd);
 		for(size_t a=0; a < pMs.size();a++)	{
 			m = pMs[a].first;
 			p.first = (long)(0.5+(double)m*res);
@@ -147,7 +146,16 @@ class load_spectra
 public:
 	load_spectra(void);
 	virtual ~load_spectra(void);
-	bool load(map<string,string>& _p,vector<spectrum>& _s);
+	bool load(map<string,string>& _p);
+	vector<spectrum> spectra;
+	void set_max(const long _max)	{
+		if(spectra.size() <= _max)	{
+			return;
+		}
+		spectra.erase(spectra.begin()+_max,spectra.end());
+		return;
+	}
+
 };
 
 

@@ -88,7 +88,7 @@ int main(int argc, char* argv[])	{
 		cout << "\t   max spectra: unlimited" << "\n";
 	}
 	cout << "\t  fragment tol: " << fragment_tolerance << " mDa\n";
-	cout << "\t    parent tol: " << params["parent_tolerance"] << " ppm\n";
+	cout << "\t    parent tol: " << params["parent tolerance"] << " ppm\n";
 	cout << "\t spectrum file: " << spectrum_file << "\n";
 	cout << "\t   kernel file: " << kernel_file << "\n";
 	cout << "\t   output file: " << output_file << "\n";
@@ -96,19 +96,18 @@ int main(int argc, char* argv[])	{
 	cout << "load & index spectra"  << "\n";
 	cout.flush();
 	high_resolution_clock::time_point t1 = high_resolution_clock::now();
-	vector<spectrum> spectra;
 	load_spectra ls;
-	if(!ls.load(params,spectra))	{
+	if(!ls.load(params))	{
 		cout << "Error (idx:0003): failed to load spectrum file \"" << spectrum_file << "\"\n";
 		return 0;
 	}
-	if(maximum_spectra != -1 and spectra.size() > maximum_spectra)	{
-		spectra.erase(spectra.begin()+maximum_spectra,spectra.end());
+	if(maximum_spectra != -1)	{
+		ls.set_max(maximum_spectra);
 	} 
 	high_resolution_clock::time_point t2 = high_resolution_clock::now();
-	cout << "	   spectra = " << spectra.size() << "\n";
+	cout << "	   spectra = " << ls.spectra.size() << "\n";
 	cout << "	spectra &Delta;T = " << duration_cast<milliseconds>(t2 - t1).count()/1000.0 << " s\n";
-	sprintf(ptemp,"%li",(long)spectra.size());
+	sprintf(ptemp,"%li",(long)ls.spectra.size());
 	params["spectra"] = ptemp;
 	t1 = high_resolution_clock::now();
 	cout << "load & index kernel"  << "\n";
@@ -116,7 +115,7 @@ int main(int argc, char* argv[])	{
 	kernels kindex;
 	map<long,long> mindex;
 	load_kernel lk;
-	if(!lk.load(params,spectra,kindex,mindex))	{
+	if(!lk.load(params,ls,kindex,mindex))	{
 		cout << "Error (idx:0005): failed to load kernel file \"" << spectrum_file << "\"\n";
 		return 0;
 	}
@@ -127,7 +126,7 @@ int main(int argc, char* argv[])	{
 	cout << "perform ids"  << "\n";
 	cout.flush();
 	create_results cr;
-	if(!cr.create(params,spectra,kindex,mindex))	{
+	if(!cr.create(params,ls,kindex,mindex))	{
 		cout << "Error (idx:0006): failed to create results " << "\n";
 		return 0;
 	}

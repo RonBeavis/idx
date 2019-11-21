@@ -42,7 +42,7 @@ public:
 	create_results(void);
 	virtual ~create_results(void);
 	bool create(map<string,string>& _p,
-			vector<spectrum>& _s,
+			load_spectra& _l,
 			kernels& _k,
 			map<long,long>& _m);
 	long size(void) { return (long)ids.size(); }

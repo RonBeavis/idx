@@ -30,7 +30,7 @@ create_results::~create_results(void) {
 }
 
 bool create_results::create(map<string, string>& _p,
-	vector<spectrum>& _s,
+	load_spectra& _l,
 	kernels& _k,
 	map<long, long>& _m) {
 	long z = 1;
@@ -57,7 +57,7 @@ bool create_results::create(map<string, string>& _p,
 	vector<double> mvs;
 	vector<double> ms;
 	size_t pos = 0;
-	for (size_t s = 0; s < _s.size(); s++) {
+	for (size_t s = 0; s < _l.spectra.size(); s++) {
 		if (s != 0 and s % 500 == 0) {
 			cout << '.';
 			cout.flush();
@@ -68,9 +68,9 @@ bool create_results::create(map<string, string>& _p,
 		}
 		ident.clear();
 		ims.clear();
-		rm = (double)_s[s].pm;
+		rm = (double)_l.spectra[s].pm;
 		pm = (long)(0.5 + rm * pt);
-		pz = (long)_s[s].pz;
+		pz = (long)_l.spectra[s].pz;
 		idx.clear();
 		idi = 0;
 		use2 = (pm > 1500000 and pz == 2);
@@ -83,29 +83,29 @@ bool create_results::create(map<string, string>& _p,
 		}
 		for (size_t a = 0; a < mvs.size(); a++) {
 			rm = mvs[a];
-			cpm = (unsigned int)(0.5 + rm * pt);
+			cpm = (long)(0.5 + rm * pt);
 			for (size_t n = 0; n < dvals.size(); n++) {
 				d = dvals[n];
-				pv.first = (unsigned int)(cpm + d);
+				pv.first = (long)(cpm + d);
 				if(_k.mvindex.find(pv.first) == _k.mvindex.end())	{
 					continue;
 				}
-				for(size_t b=0; b < _s[s].mis.size(); b++)	{
-					m = _s[s].mis[b].first;
+				for(size_t b=0; b < _l.spectra[s].mis.size(); b++)	{
+					m = _l.spectra[s].mis[b].first;
 					m2 = m * 2;
 					pv.second = m;
 					itk = _k.kindex.find(pv);
 					idx.clear();
 					if(itk !=  _k.kindex.end())	{
 						idx.insert(idx.end(),_k.kindex[pv].begin(),_k.kindex[pv].end());
-						idi = _s[s].mis[b].second;
+						idi = _l.spectra[s].mis[b].second;
 					}
 					else if(use2 and m2 > 100000)	{
 						pv.second = m2;
 						itk = _k.kindex.find(pv);
 						if(itk !=  _k.kindex.end())	{
 							idx.insert(idx.end(),_k.kindex[pv].begin(),_k.kindex[pv].end());
-							idi = _s[s].mis[b].second;
+							idi = _l.spectra[s].mis[b].second;
 						}
 					}
 					else if(use3)	{
@@ -113,7 +113,7 @@ bool create_results::create(map<string, string>& _p,
 						itk = _k.kindex.find(pv);
 						if(itk !=  _k.kindex.end())	{
 							idx.insert(idx.end(),_k.kindex[pv].begin(),_k.kindex[pv].end());
-							idi = _s[s].mis[b].second;
+							idi = _l.spectra[s].mis[b].second;
 						}
 					}
 					else	{
@@ -129,8 +129,8 @@ bool create_results::create(map<string, string>& _p,
 			continue;
 		}
 		long isum = 0;
-		for(size_t a = 0; a < _s[s].mis.size(); a++)	{
-			isum += _s[s].mis[a].second;
+		for(size_t a = 0; a < _l.spectra[s].mis.size(); a++)	{
+			isum += _l.spectra[s].mis[a].second;
 		}
 		double total = (double)isum/3;
 		set<long> aok;
@@ -193,10 +193,10 @@ bool create_results::create(map<string, string>& _p,
 			r.sn = z;
 			r.peaks = mn;
 			r.ri = max_i/total;
-			r.pm = _s[s].pm;
-			r.pz = _s[s].pz;
-			r.sc = _s[s].sc;
-			r.ions = (long)_s[s].mis.size()/3;
+			r.pm = _l.spectra[s].pm;
+			r.pz = _l.spectra[s].pz;
+			r.sc = _l.spectra[s].sc;
+			r.ions = (long)_l.spectra[s].mis.size()/3;
 			ids.push_back(r);
 		}
 		z += 1;
