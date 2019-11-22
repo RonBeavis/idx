@@ -36,9 +36,9 @@ create_output::create_output(void)	{
 create_output::~create_output(void)	{
 }
 
-long create_output::get_cells(double _pm,long _res)	{
-	long pm = 100*(long)(_pm/100000);
-	long r = 2;
+int64_t create_output::get_cells(double _pm,int64_t _res)	{
+	int64_t pm = 100*(int64_t)(_pm/100000);
+	int64_t r = 2;
 	if(_res == 50)	{
 		r = 1;
 	}
@@ -46,31 +46,31 @@ long create_output::get_cells(double _pm,long _res)	{
 		r = 0;
 	}
 	if(pm < 800)	{
-		return (long)(pm*distribution[800][r]);
+		return (int64_t)(pm*distribution[800][r]);
 	}
 	if(pm > 4000)	{
-		return (long)(pm*distribution[4000][r]);
+		return (int64_t)(pm*distribution[4000][r]);
 	}
-	return (long)(pm*distribution[pm][r]);
+	return (int64_t)(pm*distribution[pm][r]);
 }
 
-bool create_output::apply_model(long _res,string& _seq,double _pm,long _ions,long _lspectrum,double& pscore,double& p){
+bool create_output::apply_model(int64_t _res,string& _seq,double _pm,int64_t _ions,int64_t _lspectrum,double& pscore,double& p){
 	p = 0.0001;
 	pscore = 400;
-	long sfactor = 20;
-	long sadjust = 3;
+	int64_t sfactor = 20;
+	int64_t sadjust = 3;
 	if(_res > 100)	{
 		sfactor = 40;
 	}
-	long cells = get_cells(_pm,_res);
-	long total_ions = 2*(long)(_seq.size() - 1);
+	int64_t cells = get_cells(_pm,_res);
+	int64_t total_ions = 2*(int64_t)(_seq.size() - 1);
 	if(total_ions > sfactor)	{
 		total_ions = sfactor;
 	}
 	if(total_ions < _ions)	{
 		total_ions = _ions + 1;
 	}
-	long sc = _lspectrum * sadjust;
+	int64_t sc = _lspectrum * sadjust;
 	if(_ions >= sc)	{
 		sc = _ions + 2;
 	}
@@ -99,16 +99,16 @@ bool create_output::load_mods(void)	{
 }
 
 bool create_output::find_window(void)	{
-	map<long,long> vs;
-	long i = 0;
+	map<int64_t,int64_t> vs;
+	int64_t i = 0;
 	for(i = -20; i < 21; i++)	{
 		vs[i] = 0;
 	}
 	auto it = ppms.begin();
-	long max = -21;
-	long center = -1;
+	int64_t max = -21;
+	int64_t center = -1;
 	while(it != ppms.end())	{
-		i = (long)(0.5 + it->second);
+		i = (int64_t)(0.5 + it->second);
 		if(i >= -20 and i <= 20)	{
 			vs[i] += 1;
 		}
@@ -124,14 +124,14 @@ bool create_output::find_window(void)	{
 		high = 20.0;
 		return true;
 	}
-	long l = -20;
+	int64_t l = -20;
 	for(i = -20;i < center; i++)	{
 		if(vs[i]/ic >= 0.01)	{
 			l = i;
 			break;
 		}
 	}
-	long h = 20;
+	int64_t h = 20;
 	for(i = 20; i > center; i--)	{
 		if(vs[i]/ic >= 0.01)	{
 			h = i;
@@ -152,7 +152,7 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 	if(!load_mods())	{
 		cout << "Warning (idx:1001): annotation file \"report_mods.txt\" was not present" << endl;
 	}
-	long k = 0;
+	int64_t k = 0;
 	for(size_t j = 0; j < _cr.ids.size(); j++)	{
 		sv[_cr.ids[j].sn] = _cr.ids[j];
 		for(size_t i = 0; i < _cr.ids[j].ks.size(); i++)	{
@@ -161,21 +161,21 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 				sdict[k].insert(_cr.ids[j].sn);
 			}
 			else	{
-				sdict.insert(pair<long,set<long> >(k,set<long>()));
+				sdict.insert(pair<int64_t,set<int64_t> >(k,set<int64_t>()));
 				sdict[k].insert(_cr.ids[j].sn);
 			}
 		}
 	}
 
-	long res = atoi(_params["fragment tolerance"].c_str());
-	long inferred = 0;
-	long specs = atoi(_params["spectra"].c_str());
+	int64_t res = atoi(_params["fragment tolerance"].c_str());
+	int64_t inferred = 0;
+	int64_t specs = atoi(_params["spectra"].c_str());
 	double score_min = 200.0;
 	if(specs > 0)	{
 		score_min += 100.0 * log(specs)/2.3;
 	}
 	double total_prob = 0.0;
-	long min_c = 8;
+	int64_t min_c = 8;
 	if(res == 50)	{
 		min_c = 7;
 	}
@@ -184,9 +184,9 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 	}
 	string line;
 	using namespace rapidjson;
-	long c = 0;
-	long h = 0;
-	long s_count = 0;
+	int64_t c = 0;
+	int64_t h = 0;
+	int64_t s_count = 0;
 	while(getline(istr,line))	{
 		if(c != 0 and c % 10000 == 0)	{
 			cout << '.';
@@ -202,15 +202,13 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 		if(!js.HasMember("pm"))	{
 			continue;
 		}
-		h = (long)js["h"].GetInt();
+		h = (int64_t)js["h"].GetInt();
 		if(sdict.find(h) == sdict.end())	{
 			continue;
 		}
-		if(h != (long)js["u"].GetInt())	{
+		if(h != (int64_t)js["u"].GetInt())	{
 			inferred += 1;
 		}
-		long last_i = 0;
-
 		double max_prob = 0.0;
 		double prob = 0.0;
 		double delta = 0.0;
@@ -218,7 +216,7 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 		double ppm = 0.0;
 		double score = 0.0;
 		auto it = sdict[h].begin();
-		long s = 0;
+		int64_t s = 0;
 		string seq;
 		while(it != sdict[h].end())	{
 			s = *it;
@@ -245,7 +243,7 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 			oline << js["pre"].GetString() << "\t" << js["seq"].GetString() << "\t";
 			oline << js["post"].GetString() << "\t" << sv[s].peaks << "\t";
 			const Value& jbs = js["ns"];
-			long lns = 0;
+			int64_t lns = 0;
 			for(SizeType a = 0; a < jbs.Size();a++)	{
 				lns += jbs[a].GetInt();
 			}
@@ -277,15 +275,14 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 					}
 				}
 			}
-			last_i = s+1;
 			if(odict.find(s) != odict.end())	{
 				odict[s].push_back(oline.str());			
 			}
 			else	{
-				odict.insert(pair<long,vector<string> >(s,vector<string>()));
+				odict.insert(pair<int64_t,vector<string> >(s,vector<string>()));
 				odict[s].push_back(oline.str());
 			}
-			ppms[s] = (long)(0.5+ppm);
+			ppms[s] = (int64_t)(0.5+ppm);
 		}
 		total_prob += max_prob;
 		s_count++;
@@ -296,11 +293,11 @@ bool create_output::create(map<string,string>& _params,create_results& _cr)	{
 	header += "Start\tEnd\tPre\tSequence\tPost\tIC\tRI\tlog(f)\tlog(p)\tModifications";
 	ofs << header << endl;
 	find_window();
-	long err = 0;
-	long sub = 0;
-	long tot = 0;
+	int64_t err = 0;
+	int64_t sub = 0;
+	int64_t tot = 0;
 	string t;
-	for(long a = 0; a < (long)odict.size(); a++)	{
+	for(int64_t a = 0; a < (int64_t)odict.size(); a++)	{
 		sub = 1;
 		for(size_t b = 0; b < odict[a].size(); b++)	{
 			t = odict[a][b];

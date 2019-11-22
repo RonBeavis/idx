@@ -22,7 +22,6 @@
 using namespace std;
 #include "load_spectra.hpp"
 #include "load_kernel.hpp"
-#include "json_loader.hpp"
 
 load_kernel::load_kernel(void)	{
 }
@@ -30,7 +29,7 @@ load_kernel::load_kernel(void)	{
 load_kernel::~load_kernel(void)	{
 }
 
-bool load_kernel::load(map<string,string>& _params,load_spectra& _l,kernels& _kernels,map<long,long>& _mindex)	{
+bool load_kernel::load(map<string,string>& _params,load_spectra& _l,kernels& _kernels,map<int64_t,int64_t>& _mindex)	{
 	ifstream istr;
 	istr.open(_params["kernel file"]);
 	if(istr.fail())	{
@@ -41,7 +40,7 @@ bool load_kernel::load(map<string,string>& _params,load_spectra& _l,kernels& _ke
 	const double ft = 1.0/atof(_params["fragment tolerance"].c_str());
 	const double pt = 1.0/70.0;
 	const double ppm = 2.0E-5;
-	set<long> sp_set;
+	set<int64_t> sp_set;
 	phmap::parallel_flat_hash_set<sPair> spairs;
 	for(size_t a = 0; a < _l.spectra.size();a++)	{
 		sp_set.insert(_l.spectra[a].pm);
@@ -49,20 +48,18 @@ bool load_kernel::load(map<string,string>& _params,load_spectra& _l,kernels& _ke
 	}
 	auto itsp = sp_set.end();
 	auto itppm = sp_set.end();
-	long skipped = 0;
-	long hmatched = 0;
-	long pm = 0;
-	long mv = 0;
-	long cv = 0;
-	long u = 0;
-	const long c13 = 1003;
-	long val = 0;
-	long lines = 0;
+	int64_t skipped = 0;
+	int64_t hmatched = 0;
+	int64_t pm = 0;
+	int64_t mv = 0;
+	int64_t u = 0;
+	const int64_t c13 = 1003;
+	int64_t val = 0;
+	int64_t lines = 0;
 	bool skip = true;
-	long lower = 0;
-	long delta = 0;
+	int64_t lower = 0;
+	int64_t delta = 0;
 	kPair pr;
-	auto itsend = spairs.end();
 
 /*	static const size_t val_buf_sz{ 32768 };
 	char val_buf[val_buf_sz];
@@ -101,10 +98,9 @@ bool load_kernel::load(map<string,string>& _params,load_spectra& _l,kernels& _ke
 			hmatched++;
 			continue;
 		}
-		pm = (long)js["pm"].GetInt();
-		mv = (long)(0.5+(double)pm*pt);
-		cv = (long)(0.5+(double)(pm+c13)*pt);
-		delta = (long)(0.5+(double)pm*ppm);
+		pm = (int64_t)js["pm"].GetInt();
+		mv = (int64_t)(0.5+(double)pm*pt);
+		delta = (int64_t)(0.5+(double)pm*ppm);
 		lower = pm-delta;
 		itppm = sp_set.lower_bound(lower);
 		skip = true;
@@ -120,13 +116,13 @@ bool load_kernel::load(map<string,string>& _params,load_spectra& _l,kernels& _ke
 			skipped++;
 			continue;
 		}
-		u = (long)js["u"].GetInt();
+		u = (int64_t)js["u"].GetInt();
 		_mindex[u] = pm;
 		const Value& jbs = js["bs"];
-		size_t vpos = 0;
-		pr.first = (long)mv;
+//		size_t vpos = 0;
+		pr.first = (int64_t)mv;
 		for(SizeType a = 0; a < jbs.Size();a++)	{
-			val = (long)(0.5+jbs[a].GetDouble()*ft);
+			val = (int64_t)(0.5+jbs[a].GetDouble()*ft);
 			pr.second = val;
 			if(spairs.find(pr) == spairs.end())	{
 				continue;
@@ -134,12 +130,12 @@ bool load_kernel::load(map<string,string>& _params,load_spectra& _l,kernels& _ke
 			if(_kernels.kindex.find(pr) == _kernels.kindex.end())	{
 				_kernels.add_pair(pr);
 			}
-			_kernels.mvindex.insert((long)mv);
+			_kernels.mvindex.insert((int64_t)mv);
 			_kernels.kindex[pr].push_back(u);
 		}
 		const Value& jys = js["ys"];
 		for(SizeType a = 0; a < jys.Size();a++)	{
-			val = (long)(0.5+jys[a].GetDouble()*ft);
+			val = (int64_t)(0.5+jys[a].GetDouble()*ft);
 			pr.second = val;
 			if(spairs.find(pr) == spairs.end())	{
 				continue;
@@ -147,7 +143,7 @@ bool load_kernel::load(map<string,string>& _params,load_spectra& _l,kernels& _ke
 			if(_kernels.kindex.find(pr) == _kernels.kindex.end())	{
 				_kernels.add_pair(pr);
 			}
-			_kernels.mvindex.insert((long)mv);
+			_kernels.mvindex.insert((int64_t)mv);
 			_kernels.kindex[pr].push_back(u);
 		}
 //		js.SetNull();

@@ -29,7 +29,7 @@ load_spectra::~load_spectra(void)	{
 bool load_spectra::load(map<string,string>& _params)	{
 	ifstream istr;
 	istr.open(_params["spectrum file"]);
-	long res = (long)atoi(_params["fragment tolerance"].c_str());
+	int64_t res = (int64_t)atoi(_params["fragment tolerance"].c_str());
 	if(istr.fail())	{
 		return false;
 	}
@@ -48,8 +48,8 @@ bool load_spectra::load(map<string,string>& _params)	{
 	vector<double> intensities;
 	spectrum sp;
 	const double proton = 1.007276;
-	long scan = 0;
-	long s = 1;
+	int64_t scan = 0;
+	int64_t s = 1;
 	while(istr.good() && !istr.eof())	{
 		istr.getline(line,len-1,'\n');
 		temp = line;
@@ -98,8 +98,8 @@ bool load_spectra::load(map<string,string>& _params)	{
 		else if(temp.find("END IONS") != temp.npos)	{
 			sp.clear();
 			if(parent*charge > 600.0)	{
-				sp.pm = (long)(0.5 + 1000*(parent*charge - proton*charge));
-				sp.pz = (long)charge;
+				sp.pm = (int64_t)(0.5 + 1000*(parent*charge - proton*charge));
+				sp.pz = (int64_t)charge;
 				sp.pi = 100;
 				sp.pt = pt;
 				sp.desc = desc;
@@ -110,10 +110,10 @@ bool load_spectra::load(map<string,string>& _params)	{
 					sp.sc = scan;
 				}
 				size_t i = 0;
-				pair<long,long> p;
+				pair<int64_t,int64_t> p;
 				while(i < masses.size())	{
-					p.first = (long)(0.5+1000.0*(masses[i]-proton));
-					p.second = (long)(0.5+intensities[i]);
+					p.first = (int64_t)(0.5+1000.0*(masses[i]-proton));
+					p.second = (int64_t)(0.5+intensities[i]);
 					sp.mis.push_back(p);
 					i++;
 				}

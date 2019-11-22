@@ -10,20 +10,20 @@
 #include <algorithm>
 #include <cmath>
 
-typedef std::pair <long,long> sPair;
+typedef std::pair <int64_t,int64_t> sPair;
 
 class spectrum
 {
 public:
 	spectrum(void)	{pm = 0;pi=0;pz=0;sc=0;pt=0.0;}
 	virtual ~spectrum(void)	{ clear(); }
-	long pm;
-	long pi;
-	long pz;
-	long sc;
-	long isum;
+	int64_t pm;
+	int64_t pi;
+	int64_t pz;
+	int64_t sc;
+	int64_t isum;
 	double pt;
-	vector<pair<long,long>> mis;
+	vector<pair<int64_t,int64_t>> mis;
 	phmap::parallel_flat_hash_set<sPair> spairs;
 	string desc;
 	bool clear()	{sc = 0;pm = 0; pi = 0; pz = 0; sc=0; desc = ""; mis.clear();spairs.clear();return true;}
@@ -35,7 +35,7 @@ public:
 		pt = rhs.pt;
 		desc = rhs.desc;
 		sc = rhs.sc;
-		pair<long,long> p;
+		pair<int64_t,int64_t> p;
 		for(size_t i = 0; i < rhs.mis.size(); i++)	{
 			p.first = rhs.mis[i].first;
 			p.second = rhs.mis[i].second;
@@ -45,25 +45,25 @@ public:
 		spairs.insert(rhs.spairs.begin(),rhs.spairs.end());
 		return *this;
 	}
-	bool condition(long _ires, long _l)	{
+	bool condition(int64_t _ires, int64_t _l)	{
 		double i_max = 0.0;
 		const double res = 1.0/(double)_ires;
-		long m = 0;
-		long i = 0;
+		int64_t m = 0;
+		int64_t i = 0;
 		sort(mis.begin(), mis.end(), 
                		[](const auto& x, const auto& y) { return x.first < y.first; } );
 		for(size_t a = 0; a < mis.size(); a++)	{
 			m = mis[a].first;
 			i = mis[a].second;		
-			if(m < 150000 or (long)fabs(pm-m) < 45000 or (long)fabs(pm/pz- m) < 2000)	{
+			if(m < 150000 or (int64_t)fabs(pm-m) < 45000 or (int64_t)fabs(pm/pz- m) < 2000)	{
 				continue;
 			}
 			if(i > i_max)	{
-				i_max = i;
+				i_max = (double)i;
 			}
 		}
-		vector<long> sMs;
-		vector<long> sIs;
+		vector<int64_t> sMs;
+		vector<int64_t> sIs;
 		i_max = i_max/100.0;
 		for(size_t a = 0; a < mis.size(); a++)	{
 			m = mis[a].first;
@@ -92,8 +92,8 @@ public:
 				}
 			}
 		}
-		vector<pair<long,long> > pMs;
-		pair<long,long> p(0,0);
+		vector<pair<int64_t,int64_t> > pMs;
+		pair<int64_t,int64_t> p(0,0);
 		for(size_t a = 0; a < sMs.size();a++)	{
 			p.first = sMs[a];
 			p.second = sIs[a];
@@ -101,11 +101,11 @@ public:
 		}
 		sort(pMs.begin(), pMs.end(), 
                		[](const auto& x, const auto& y) { if(x.second > y.second) return true; if(x.second == y.second) return x.first < y.first; return false;} );
-		long max_l = 2 * (long)((0.5 + (double)pm)/100000.0);
+		int64_t max_l = 2 * (int64_t)((0.5 + (double)pm)/100000.0);
 		if(max_l > _l)	{
 			max_l = _l;
 		}
-		while(pMs.size() > max_l)	{
+		while(pMs.size() > (size_t)max_l)	{
 			pMs.pop_back();
 		}
 		sort(pMs.begin(), pMs.end(), 
@@ -114,14 +114,14 @@ public:
 //
 //		generate a normalized set of spectrum masses
 //
-		long is = 0;
+		int64_t is = 0;
 		mis.clear();
 		sPair pr;
 		const double ptd = 1.0/70.0;
-		pr.first = (long)(0.5+(double)pm*ptd);
+		pr.first = (int64_t)(0.5+(double)pm*ptd);
 		for(size_t a=0; a < pMs.size();a++)	{
 			m = pMs[a].first;
-			p.first = (long)(0.5+(double)m*res);
+			p.first = (int64_t)(0.5+(double)m*res);
 			pr.second = p.first;
 			spairs.insert(pr);
 			p.second = pMs[a].second;
@@ -148,8 +148,8 @@ public:
 	virtual ~load_spectra(void);
 	bool load(map<string,string>& _p);
 	vector<spectrum> spectra;
-	void set_max(const long _max)	{
-		if(spectra.size() <= _max)	{
+	void set_max(const int64_t _max)	{
+		if(spectra.size() <= (size_t)_max)	{
 			return;
 		}
 		spectra.erase(spectra.begin()+_max,spectra.end());

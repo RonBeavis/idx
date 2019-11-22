@@ -12,14 +12,14 @@ class id
 public:
 	id(void)	{}
 	virtual ~id(void)	{}
-	long sn;
-	long peaks;
-	vector<long> ks;
+	int64_t sn;
+	int64_t peaks;
+	vector<int64_t> ks;
 	double ri;
-	long pm;
-	long pz;
-	long sc;
-	long ions;
+	int64_t pm;
+	int64_t pz;
+	int64_t sc;
+	int64_t ions;
 	id& operator=(const id &rhs)	{
 		sn = rhs.sn;
 		peaks = rhs.peaks;
@@ -44,8 +44,8 @@ public:
 	bool create(map<string,string>& _p,
 			load_spectra& _l,
 			kernels& _k,
-			map<long,long>& _m);
-	long size(void) { return (long)ids.size(); }
+			map<int64_t,int64_t>& _m);
+	int64_t size(void) { return (int64_t)ids.size(); }
 	vector<id> ids;
 };
 

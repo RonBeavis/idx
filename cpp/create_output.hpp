@@ -9,21 +9,21 @@
 
 class hypergeom	{
 public:
-	hypergeom(long _n,long _r,long _N)	{n = _n; r = _r; N = _N;}
+	hypergeom(int64_t _n,int64_t _r,int64_t _N)	{n = _n; r = _r; N = _N;}
 	virtual ~hypergeom() {}
-	long n;
-	long N;
-	long r;
-	double pdf(long k)	{
+	int64_t n;
+	int64_t N;
+	int64_t r;
+	double pdf(int64_t k)	{
 		double top = st(n)+st(r)+st(N-n)+st(N-r);
 		double bottom = st(N)+st(k)+st(n-k)+st(r-k)+st(N-n-r+k);
 		double lp = top - bottom;
 		return exp(lp);
 	}
-	double st(long _n)	{
+	double st(int64_t _n)	{
 		if(_n < 50)	{
 			double f = 1.0;
-			for(long i = 1; i <= _n; i++)    {
+			for(int64_t i = 1; i <= _n; i++)    {
         			f *= (double)i;
    			 }
 			return log(f);
@@ -39,9 +39,9 @@ class mod
 public:
 	mod(void)	{}
 	virtual ~mod(void)	{}
-	long pos;
+	int64_t pos;
 	string res;
-	long mass;
+	int64_t mass;
 	mod& operator=(const mod &rhs)	{
 		pos = rhs.pos;
 		res = rhs.res;
@@ -63,17 +63,17 @@ public:
 private:
 	bool load_mods(void);
 	bool find_window(void);
-	long get_cells(double _pm,long _res);
-	bool apply_model(long _r,string& _s,double _pm,long _ions,long _lspectrum,double& pscore,double& p);
+	int64_t get_cells(double _pm,int64_t _res);
+	bool apply_model(int64_t _r,string& _s,double _pm,int64_t _ions,int64_t _lspectrum,double& pscore,double& p);
 	double low;
 	double high;
-	map<long,id> sv;
-	map<long,set<long> > sdict;
-	map<long,string> mt;
-	map<long,vector<string> > odict;
-	map<long,long> ppms;
-	const long c13 = 1003;
-	map<long,vector<double> > distribution;
+	map<int64_t,id> sv;
+	map<int64_t,set<int64_t> > sdict;
+	map<int64_t,string> mt;
+	map<int64_t,vector<string> > odict;
+	map<int64_t,int64_t> ppms;
+	const int64_t c13 = 1003;
+	map<int64_t,vector<double> > distribution;
 	double get_ppm(string& t)	{
 		size_t s = t.find("\t");
 		s = t.find("\t",s+1);

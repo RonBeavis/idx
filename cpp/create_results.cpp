@@ -32,31 +32,29 @@ create_results::~create_results(void) {
 bool create_results::create(map<string, string>& _p,
 	load_spectra& _l,
 	kernels& _k,
-	map<long, long>& _m) {
-	long z = 1;
+	map<int64_t, int64_t>& _m) {
+	int64_t z = 1;
 	double pt = 1.0 / 70.0;
 	double ppm = atof(_p["parent tolerance"].c_str()) / 1.0e06;
-	vector<long> dvals{ -1,0,1 };
-	long d = 0;
-	long m = 0;
-	long m2 = 0;
+	vector<int64_t> dvals{ -1,0,1 };
+	int64_t d = 0;
+	int64_t m = 0;
+	int64_t m2 = 0;
 	double c13 = 1003.0;
 	double rm = 0.0;
-	long pm = 0;
-	long pz = 0;
-	long idi = 0;
-	long cpm = 0;
-	vector<long> idx;
-	vector<vector<long> > ident;
-	vector<long> ims;
+	int64_t pm = 0;
+	int64_t pz = 0;
+	int64_t idi = 0;
+	int64_t cpm = 0;
+	vector<int64_t> idx;
+	vector<vector<int64_t> > ident;
+	vector<int64_t> ims;
 	bool use2 = false;
 	bool use3 = false;
-	auto itkend = _k.kindex.end();
 	auto itk = _k.kindex.end();
 	kPair pv;
 	vector<double> mvs;
 	vector<double> ms;
-	size_t pos = 0;
 	for (size_t s = 0; s < _l.spectra.size(); s++) {
 		if (s != 0 and s % 500 == 0) {
 			cout << '.';
@@ -69,8 +67,8 @@ bool create_results::create(map<string, string>& _p,
 		ident.clear();
 		ims.clear();
 		rm = (double)_l.spectra[s].pm;
-		pm = (long)(0.5 + rm * pt);
-		pz = (long)_l.spectra[s].pz;
+		pm = (int64_t)(0.5 + rm * pt);
+		pz = (int64_t)_l.spectra[s].pz;
 		idx.clear();
 		idi = 0;
 		use2 = (pm > 1500000 and pz == 2);
@@ -83,10 +81,10 @@ bool create_results::create(map<string, string>& _p,
 		}
 		for (size_t a = 0; a < mvs.size(); a++) {
 			rm = mvs[a];
-			cpm = (long)(0.5 + rm * pt);
+			cpm = (int64_t)(0.5 + rm * pt);
 			for (size_t n = 0; n < dvals.size(); n++) {
 				d = dvals[n];
-				pv.first = (long)(cpm + d);
+				pv.first = (int64_t)(cpm + d);
 				if(_k.mvindex.find(pv.first) == _k.mvindex.end())	{
 					continue;
 				}
@@ -128,25 +126,25 @@ bool create_results::create(map<string, string>& _p,
 		if(ident.empty())	{
 			continue;
 		}
-		long isum = 0;
+		int64_t isum = 0;
 		for(size_t a = 0; a < _l.spectra[s].mis.size(); a++)	{
 			isum += _l.spectra[s].mis[a].second;
 		}
 		double total = (double)isum/3;
-		set<long> aok;
+		set<int64_t> aok;
 		for(size_t b = 0; b < ident.size(); b++)	{
 			for(size_t c = 0; c < ident[b].size(); c++)	{
-				long a = ident[b][c];
+				int64_t a = ident[b][c];
 				if(fabs(ms[b]-_m[a]) < ppm*ms[b])	{
 					aok.insert(a);
 				}
 			}
 		}
-		map<long,long> ans;
-		map<long,long> aint;
+		map<int64_t,int64_t> ans;
+		map<int64_t,int64_t> aint;
 		for(size_t b = 0; b < ident.size(); b++)	{
-			set<long> sv(ident[b].begin(),ident[b].end());
-			set<long>::iterator it = sv.begin();
+			set<int64_t> sv(ident[b].begin(),ident[b].end());
+			set<int64_t>::iterator it = sv.begin();
 			while(it != sv.end())	{
 				if(aok.find(*it) == aok.end())	{
 					ans[*it] = 0;
@@ -163,10 +161,10 @@ bool create_results::create(map<string, string>& _p,
 				it++;
 			}
 		}
-		long mn = 0;
-		vector<long> mv;
-		vector<long> iv;
-		map<long,long>::iterator itans = ans.begin();
+		int64_t mn = 0;
+		vector<int64_t> mv;
+		vector<int64_t> iv;
+		map<int64_t,int64_t>::iterator itans = ans.begin();
 		while(itans != ans.end())	{
 			if(itans->second > mn)	{
 				mn = itans->second;
@@ -183,7 +181,7 @@ bool create_results::create(map<string, string>& _p,
 		}
 		if(mn > 4)	{
 			id r;
-			long max_i = *max_element(iv.begin(),iv.end());
+			int64_t max_i = *max_element(iv.begin(),iv.end());
 			for(size_t b = 0; b < mv.size(); b++)	{
 				if(iv[b] < max_i)	{
 					continue;
@@ -196,7 +194,7 @@ bool create_results::create(map<string, string>& _p,
 			r.pm = _l.spectra[s].pm;
 			r.pz = _l.spectra[s].pz;
 			r.sc = _l.spectra[s].sc;
-			r.ions = (long)_l.spectra[s].mis.size()/3;
+			r.ions = (int64_t)_l.spectra[s].mis.size()/3;
 			ids.push_back(r);
 		}
 		z += 1;
