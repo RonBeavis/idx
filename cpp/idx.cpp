@@ -41,7 +41,7 @@ int main(int argc, char* argv[])	{
 	string version = "idX, 2020.1";
 	params["version"] = version;
 
-	long fragment_tolerance = 400;
+	int64_t fragment_tolerance = 400;
 	if(argc > 4 and strcmp(argv[4],"high") == 0)	{
 		fragment_tolerance = 20;
 	}
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])	{
 		fragment_tolerance = 50;
 	}
 	char ptemp[64];
-	sprintf(ptemp,"%li",fragment_tolerance);
+	sprintf(ptemp,"%li",(long)fragment_tolerance);
 	params["fragment tolerance"] = ptemp;
 
 	string spectrum_file = argv[1];
@@ -69,15 +69,15 @@ int main(int argc, char* argv[])	{
 	string output_file = argv[3];
 	params["output file"] = output_file;
 
-	long maximum_spectra = -1;
+	int64_t maximum_spectra = -1;
 	if(argc > 5)	{
 		maximum_spectra = atoi(argv[5]);
 	}
-	sprintf(ptemp,"%li",maximum_spectra);
+	sprintf(ptemp,"%li",(long)maximum_spectra);
 	params["maximum spectra"] = ptemp;
 
-	long parent_tolerance = 20;
-	sprintf(ptemp,"%li",parent_tolerance);
+	int64_t parent_tolerance = 20;
+	sprintf(ptemp,"%li",(long)parent_tolerance);
 	params["parent tolerance"] = ptemp;
 
 	cout << "\nstart ...\nidX parameters" << "\n";
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])	{
 	cout << "load & index kernel"  << "\n";
 	cout.flush();
 	kernels kindex;
-	map<long,long> mindex;
+	map<int64_t,int64_t> mindex;
 	load_kernel lk;
 	if(!lk.load(params,ls,kindex,mindex))	{
 		cout << "Error (idx:0005): failed to load kernel file \"" << spectrum_file << "\"\n";
