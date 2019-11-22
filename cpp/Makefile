@@ -3,7 +3,7 @@
 
 EXECUTABLE = bin/idx
 LINKCC = $(CXX)
-
+INC_PATH=.
 #CXXFLAGS denotes flags for the C++ compiler
 
 CXX = g++
@@ -11,7 +11,7 @@ CXX = g++
 #uncomment this line if you are using gcc 4.x
 #CXXFLAGS = -O3 -fopenmp -D_GLIBCXX_PARALLEL -march=native
 #CXXFLAGS = -fprofile-generate
-CXXFLAGS = -O2
+CXXFLAGS = -O2 -I$(INC_PATH) -Wall
 
 SRCS := $(wildcard *.cpp)
 OBJS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
