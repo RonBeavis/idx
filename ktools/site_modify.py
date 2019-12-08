@@ -47,6 +47,8 @@ def sites_process(_os,_of,_mhash,_sdict,_type,_limit):
 		return 0
 	site_list = []
 	dlimit = 1
+	if _type == 'pho':
+		dlimit = 2
 	for d in range(1,dlimit + 1):
 		site_list += list(itertools.combinations(spos,d))
 	count = 0
@@ -146,10 +148,10 @@ def update_kernels(_info):
 	print(scount)
 
 if len(sys.argv) != 4:
-	print('usage:\n\t>python3 special_modify.py INPUT OUTPUT SITES')
+	print('usage:\n\t>python3 site_modify.py INPUT OUTPUT SITES')
 	exit()
 
-print('Additional rare modifications')
+print('Additional site-specific modifications')
 info = dict()
 info['input file'] = sys.argv[1]
 info['output file'] = sys.argv[2]

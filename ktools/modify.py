@@ -407,7 +407,10 @@ def update_vindex(_info,_d):
 	print('')
 
 if len(sys.argv) != 5:
-	print('usage:\n\t>python3 kernel_modifier.py INPUT OUTPUT mass@X -(vf)')
+	print('''usage:\n\t>python3 kernel_modifier.py INPUT OUTPUT mass@X -(vfs)
+	-v variable mod
+	-f fixed mod
+	-s fixed mod, skip if already modified, unless it is K-ubiquitin''')
 	exit()
 
 info = dict()

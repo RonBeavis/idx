@@ -31,13 +31,19 @@ def get_hvalue(_js):
 	return u
 
 if len(sys.argv) < 3:
-	print('usage:\n\t>python3 OUTPUT IN1 IN2 IN3 ...')
+	print('usage:\n\t>python3 OUTPUT IN1 IN2 IN3 ... (-f)')
 	exit()
 
 ofile = sys.argv[1]
 i = 2
 files = []
+finalize = False
 while i < len(sys.argv):
+	if sys.argv[i] == '-f':
+		finalize = True
+		print('finalize kernel set')
+		i += 1
+		continue
 	files.append(sys.argv[i])
 	i += 1
 
@@ -60,10 +66,28 @@ for f in files:
 		js = ujson.loads(l)
 		if 'pm' not in js:
 			continue
+		cnts = {}
+		for s in js['seq']:
+			if s in cnts:
+				cnts[s] += 1
+			else:
+				cnts[s] = 1
+		ls = len(js['seq'])
+		bail = False
+		for s in cnts:
+			if cnts[s] == ls:
+				bail = True
+				break
+		if bail:
+			print(js['seq'])
+			continue
 		js['u'] = u
 		h = get_hvalue(js)
 		js['h'] = h
 		if u != h:
+			if finalize:
+				del js['bs']
+				del js['ys']
 			hcount += 1
 		li = ujson.dumps(js) + '\n'
 		of.write(li)
